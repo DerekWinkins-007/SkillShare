@@ -116,9 +116,10 @@ SkillShare/
 │   │       ├── useAuth.ts       # useAuth hook
 │   │       └── index.ts         # Module re-exports
 │   ├── pages/
-│   │   ├── Login.tsx            # Single login form (regno or email)
+│   │   ├── Login.tsx            # Student login form (regno, email, password)
+│   │   ├── AdminLogin.tsx       # Administrator login form (email, password)
 │   │   ├── StudentSignup.tsx    # Student registration
-│   │   ├── AdminSignup.tsx      # Admin registration with keyphrase gate
+│   │   ├── AdminSignup.tsx      # Admin registration with keyphrase gate (links to /admin/login)
 │   │   ├── ProfileSetup.tsx     # Mandatory 3-step profile setup
 │   │   ├── ProfileEdit.tsx      # Profile editing
 │   │   ├── PublicProfile.tsx    # Public profile and reviews (no contact leaks)
@@ -142,13 +143,40 @@ SkillShare/
 
 ---
 
-## 4. Feature to Database Table Mapping
+## 4. Application Routes
 
+| Path | Component | Guard / Access | Description |
+|---|---|---|---|
+| `/login` | `Login` | Signed-out only | Student sign in (regno, email, password) |
+| `/signup` | `StudentSignup` | Signed-out only | Student account registration |
+| `/admin/login` | `AdminLogin` | Signed-out only | Administrator sign in (email, password) |
+| `/admin/signup` | `AdminSignup` | Signed-out only | Administrator registration with secret keyphrase |
+| `/dashboard` | `StudentDashboard` | `RequireStudent` | Student overview, upcoming sessions, quick stats |
+| `/catalogue` | `Catalogue` | `RequireStudent` | Browse skills, filter by category/search, manage offered skills |
+| `/skills/:skillid` | `SkillDetail` | `RequireStudent` | View skill details, instructors list, and request session |
+| `/requests` | `RequestsList` | `RequireStudent` | Received and Sent skill requests with status tabs |
+| `/requests/:requestid` | `RequestDetail` | `RequireStudent` | Request lifecycle actions (accept, propose slot, cancel, contact reveal) |
+| `/profile/setup` | `ProfileSetup` | `RequireStudent` (allows incomplete) | Mandatory 3-step profile onboarding |
+| `/profile/edit` | `ProfileEdit` | `RequireStudent` (allows incomplete) | Edit personal details and contact numbers |
+| `/profile/:studentid` | `PublicProfile` | `RequireStudent` | Public view of student skills and reviews (redacted contact info) |
+| `/proposals` | `StudentProposals` | `RequireStudent` | Submit category requests and skill proposals |
+| `/reports` | `Reports` | `RequireStudent` | Run system SQL reports 1 to 5 |
+| `/admin` | `AdminDashboard` | `RequireAdmin` | Administrative overview and system metrics |
+| `/admin/categories` | `AdminCategories` | `RequireAdmin` | Category CRUD and category request approval queue |
+| `/admin/skills` | `AdminSkills` | `RequireAdmin` | Skill CRUD and skill proposal approval queue |
+| `/admin/requests` | `AdminRequests` | `RequireAdmin` | Read-only audit log of all system skill requests |
+| `/admin/students` | `AdminStudents` | `RequireAdmin` | Read-only directory and status of all students |
+
+---
+
+## 5. Feature to Database Table Mapping
+ 
 | Feature | Tables Read | Tables Written |
 |---|---|---|
 | **Student Sign-Up** | `signup`, `app_user` | `student`, `signup`, `app_user` |
 | **Admin Sign-Up** | `app_user` | `app_user` |
-| **Sign-In** | `signup`, `app_user`, `student` | None (reads session) |
+| **Student Sign-In** | `signup`, `app_user`, `student` | None (reads session / verifies regno + email via RPC) |
+| **Admin Sign-In** | `app_user` | None (reads session / verifies admin role) |
 | **Get Me / Auth State** | `app_user`, `student`, `signup` | None |
 | **Update Profile** | `student` | `student` |
 | **View Public Profile** | `student`, `studenthas_skill`, `skill`, `category`, `student_receives_feedback`, `skill_request`, `student_receives_skill_request` | None |
@@ -173,7 +201,7 @@ SkillShare/
 
 ---
 
-## 5. Query Key Invalidation Mapping
+## 6. Query Key Invalidation Mapping
 
 All cache keys are generated from the typed factory in `src/lib/queryKeys.ts`.
 
@@ -199,11 +227,11 @@ All cache keys are generated from the typed factory in `src/lib/queryKeys.ts`.
 | `syncCompletedRequests` | `queryKeys.requests.myRequests('requester')`, `queryKeys.requests.myRequests('provider')`, `queryKeys.requests.feedbackDue`, `queryKeys.notifications.list`, `queryKeys.dashboard.my` |
 | `submitFeedback` | `queryKeys.requests.detail(id)`, `queryKeys.requests.feedbackDue`, `queryKeys.dashboard.my`, `queryKeys.profile.public(id)` |
 | `markNotificationsRead` | `queryKeys.notifications.list` |
-| `signIn` / `signOut` / `onAuthChange` | `queryKeys.auth.me`, all cache cleared on sign out |
+| `signIn` / `signInAdmin` / `signOut` / `onAuthChange` | `queryKeys.auth.me`, all cache cleared on sign out |
 
 ---
 
-## 6. ASSUMPTIONS
+## 7. ASSUMPTIONS
 
 As required by Section 0 ("Never guess: if something is not specified, implement the most restrictive reasonable behaviour and list it under ASSUMPTIONS in the README"):
 

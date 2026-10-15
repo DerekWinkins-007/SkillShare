@@ -122,6 +122,49 @@ describe('mock.adapter.ts test suite', () => {
         })
       ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
     });
+
+    it('signIn role enforcement: admin cannot sign in via student signIn; student cannot sign in via signInAdmin', async () => {
+      // Create student and admin
+      await mockAdapter.signUpStudent({
+        regno: '25BCE5555',
+        email: 'student5555@vit.ac.in',
+        password: 'Password123',
+      });
+      await mockAdapter.signOut();
+
+      await mockAdapter.signUpAdmin({
+        display_name: 'Admin Five',
+        email: 'admin5555@vit.ac.in',
+        password: 'Password123',
+        keyphrase: MOCK_ADMIN_KEYPHRASE,
+      });
+      await mockAdapter.signOut();
+
+      // Student cannot use signInAdmin
+      await expect(
+        mockAdapter.signInAdmin({
+          email: 'student5555@vit.ac.in',
+          password: 'Password123',
+        })
+      ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+
+      // Admin signs in via signInAdmin successfully
+      await mockAdapter.signInAdmin({
+        email: 'admin5555@vit.ac.in',
+        password: 'Password123',
+      });
+      const meAdmin = await mockAdapter.getMe();
+      expect(meAdmin?.role).toBe('admin');
+      await mockAdapter.signOut();
+
+      // Admin with wrong password on signInAdmin fails
+      await expect(
+        mockAdapter.signInAdmin({
+          email: 'admin5555@vit.ac.in',
+          password: 'WrongPassword1',
+        })
+      ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+    });
   });
 
   describe('Admin Operations (Requirement 10)', () => {
