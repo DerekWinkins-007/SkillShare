@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mockAdapter, resetMockDb } from './mock.adapter';
+import { mockAdapter, resetMockDb, getMockOutbox } from './mock.adapter';
 import { resetClock, advanceClock, now } from '../../clock';
 import { MOCK_ADMIN_KEYPHRASE } from './secret';
 
@@ -164,6 +164,117 @@ describe('mock.adapter.ts test suite', () => {
           password: 'WrongPassword1',
         })
       ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+    });
+
+    it('login email vs contact emails: editing email1/email2 does not alter login email or notification recipient', async () => {
+      // 1. Sign up student
+      await mockAdapter.signUpStudent({
+        regno: '25BCE7777',
+        email: 'original_login@vit.ac.in',
+        password: 'Password123',
+      });
+
+      // 2. Update profile with completely different contact emails (email1, email2)
+      await mockAdapter.updateMyProfile({
+        fname: 'Separation',
+        lname: 'Tester',
+        dept: 'CSE',
+        year: 3,
+        phone1: '9876543210',
+        phone2: null,
+        email1: 'contact_only@personal.com',
+        email2: 'secondary_contact@personal.com',
+      });
+
+      const me = await mockAdapter.getMe();
+      expect(me?.login_email).toBe('original_login@vit.ac.in');
+      expect(me?.student?.email1).toBe('contact_only@personal.com');
+      expect(me?.student?.email2).toBe('secondary_contact@personal.com');
+
+      // 3. Sign out and verify sign in STILL requires original login email
+      await mockAdapter.signOut();
+
+      // Trying to sign in with contact email must fail with INVALID_CREDENTIALS
+      await expect(
+        mockAdapter.signIn({
+          regno: '25BCE7777',
+          email: 'contact_only@personal.com',
+          password: 'Password123',
+        })
+      ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+
+      // Sign in with original login email succeeds
+      await mockAdapter.signIn({
+        regno: '25BCE7777',
+        email: 'original_login@vit.ac.in',
+        password: 'Password123',
+      });
+      expect(await mockAdapter.getMe()).not.toBeNull();
+
+      // 4. Verify mock email outbox recipient goes to login email, NOT contact email1/email2
+      // Sign up another student to create a request
+      await mockAdapter.signOut();
+      await mockAdapter.signUpStudent({
+        regno: '25BCE8888',
+        email: 'requester8888@vit.ac.in',
+        password: 'Password123',
+      });
+      await mockAdapter.updateMyProfile({
+        fname: 'Req',
+        lname: 'User',
+        dept: 'ECE',
+        year: 2,
+        phone1: '9123456780',
+        phone2: null,
+        email1: 'req_contact@vit.ac.in',
+        email2: null,
+      });
+
+      // Create a category and skill via admin
+      await mockAdapter.signOut();
+      await mockAdapter.signUpAdmin({
+        display_name: 'Admin Pre',
+        email: 'admin_pre@vit.ac.in',
+        password: 'Password123',
+        keyphrase: MOCK_ADMIN_KEYPHRASE,
+      });
+      const cat = await mockAdapter.adminCreateCategory('Testing Cat');
+      const sk = await mockAdapter.adminCreateSkill({
+        name: 'Unit Testing',
+        categoryid: cat.categoryid,
+      });
+
+      // Switch back to 7777, add the skill
+      await mockAdapter.signOut();
+      await mockAdapter.signIn({
+        regno: '25BCE7777',
+        email: 'original_login@vit.ac.in',
+        password: 'Password123',
+      });
+      await mockAdapter.addMySkill(sk.skillid);
+
+      // Requester requests session with 7777
+      await mockAdapter.signOut();
+      await mockAdapter.signIn({
+        regno: '25BCE8888',
+        email: 'requester8888@vit.ac.in',
+        password: 'Password123',
+      });
+      const providerStudentId = me?.student?.studentid as number;
+      const reqId = await mockAdapter.createRequest({
+        provider_studentid: providerStudentId,
+        skillid: sk.skillid,
+      });
+
+      // Process email outbox
+      await mockAdapter.processEmailOutbox(reqId);
+      const outbox = getMockOutbox();
+      const lastEmail = outbox[outbox.length - 1];
+
+      // Email was addressed to provider 7777
+      expect(lastEmail.to).toEqual(['original_login@vit.ac.in']);
+      expect(lastEmail.to).not.toContain('contact_only@personal.com');
+      expect(lastEmail.to).not.toContain('secondary_contact@personal.com');
     });
   });
 

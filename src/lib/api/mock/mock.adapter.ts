@@ -2341,10 +2341,11 @@ export class MockAdapter implements SkillShareAPI {
     for (const item of queued) {
       try {
         const rendered = renderEmail(item.payload);
-        const recipient = db.student.find((s) => s.studentid === item.to_studentid);
+        const recipientUser = db.app_user.find((u) => u.studentid === item.to_studentid);
         const toEmails: string[] = [];
-        if (recipient?.email1) toEmails.push(recipient.email1);
-        if (recipient?.email2) toEmails.push(recipient.email2);
+        if (recipientUser?.email) {
+          toEmails.push(recipientUser.email);
+        }
 
         const sent: SentEmail = {
           emailid: item.emailid,

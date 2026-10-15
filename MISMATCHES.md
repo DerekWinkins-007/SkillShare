@@ -34,9 +34,12 @@ This document records the exact contract alignments and design decisions between
    - Creates the Supabase Auth user via admin API with `email_confirm: true`.
    - Inserts `public.app_user (auth_id, role='admin', display_name, studentid=NULL)`.
 
-3. **Login Resolution (`resolve_login_identifier`)**:
-   - Allows students to log in using either their email address or their university registration number.
-   - Resolves `p_regno` to the corresponding `email` from `auth.users` / `student.email1`.
+3. **Login Resolution (`resolve_login_identifier`) & Email Roles**:
+   - **Login Email** = `auth.users.email`. This is the single address used for authentication and the ONLY destination address SkillShare sends notifications and meeting emails to.
+   - **Contact Emails** = `student.email1` and `student.email2`. These are strictly counterpart contact details revealed upon session confirmation (`get_contact_details` and confirmation email body). SkillShare never sends automated emails to them.
+   - Editing `email1` or `email2` via `update_my_profile` never alters the login email or notification recipient.
+   - `resolve_login_identifier(p_regno)` strictly returns `auth.users.email` by joining `signup` -> `app_user` -> `auth.users`, never falling back to `student.email1`.
+   - `get_me()` returns `login_email` directly from `auth.users.email`.
 
 ---
 

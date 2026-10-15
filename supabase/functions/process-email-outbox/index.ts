@@ -145,7 +145,7 @@ serve(async (req: Request) => {
 
     let query = supabaseAdmin
       .from('email_outbox')
-      .select('*, student:to_studentid(email1, email2)')
+      .select('*, app_user:to_studentid!inner(auth_id)')
       .eq('status', 'queued')
       .order('created_at', { ascending: true })
       .limit(50);
@@ -168,9 +168,36 @@ serve(async (req: Request) => {
     for (const item of queued ?? []) {
       try {
         const rendered = renderEmail(item.payload);
-        const toEmails: string[] = [];
-        if (item.student?.email1) toEmails.push(item.student.email1);
-        if (item.student?.email2) toEmails.push(item.student.email2);
+        
+        // Look up recipient auth_id from app_user via to_studentid
+        const authId = item.app_user?.auth_id;
+        if (!authId) {
+          // Fallback direct query if join not configured
+          const { data: userRow } = await supabaseAdmin
+            .from('app_user')
+            .select('auth_id')
+            .eq('studentid', item.to_studentid)
+            .maybeSingle();
+          if (!userRow?.auth_id) {
+            throw new Error(`No app_user found for studentid ${item.to_studentid}`);
+          }
+        }
+
+        const effectiveAuthId = authId ?? (
+          (await supabaseAdmin
+            .from('app_user')
+            .select('auth_id')
+            .eq('studentid', item.to_studentid)
+            .single()).data?.auth_id
+        );
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(effectiveAuthId);
+        if (userError || !userData?.user?.email) {
+          throw new Error(`Failed to get login email for auth_id ${effectiveAuthId}: ${userError?.message}`);
+        }
+
+        const loginEmail = userData.user.email;
+        const toEmails: string[] = [loginEmail];
 
         // If email service provider configured (e.g. Resend), send here.
         // In local/sandbox environments, log to console.
