@@ -34,7 +34,32 @@ function escapeHtml(str: string | number | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
-function renderEmail(payload: any): { subject: string; html: string; text: string } {
+interface OutboxPayload {
+  kind: string;
+  skillname?: string;
+  categoryname?: string;
+  meeting_time?: string;
+  cancel_deadline?: string;
+  mode?: string;
+  location?: string | null;
+  meeting_link?: string | null;
+  requester_name?: string;
+  provider_name?: string;
+  cancelled_by_fname?: string;
+  reason?: string;
+  counterpart?: {
+    fname: string;
+    lname: string;
+    dept: string;
+    year: number;
+    phone1: string;
+    phone2?: string | null;
+    email1: string;
+    email2?: string | null;
+  };
+}
+
+function renderEmail(payload: OutboxPayload): { subject: string; html: string; text: string } {
   switch (payload.kind) {
     case 'request_confirmed': {
       const formattedTime = formatIST(payload.meeting_time);

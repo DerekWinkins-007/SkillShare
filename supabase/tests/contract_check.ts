@@ -5,11 +5,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-interface AdapterRpcCall {
-  name: string;
-  params: string[];
-}
-
 function runContractCheck() {
   console.log('=== SkillShare Adapter <-> SQL Migrations Contract Check ===\n');
 
