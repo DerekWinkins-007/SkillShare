@@ -24,7 +24,7 @@ import {
   SlotProposal,
   StudentRow,
 } from '../types';
-import { isLoginIdentifierRegno } from '../rules';
+
 import { SkillShareAPI } from './api.interface';
 
 const KNOWN_CODES: Set<string> = new Set<ErrorCode>([
@@ -172,34 +172,70 @@ export class SupabaseAdapter implements SkillShareAPI {
     }
   }
 
-  async signIn(input: { identifier: string; password: string }): Promise<void> {
+  async signIn(input: { regno: string; email: string; password: string }): Promise<void> {
     try {
       const client = this.getClient();
-      const raw = input.identifier.trim();
-      let email = raw.toLowerCase();
+      const regno = input.regno.trim().toUpperCase();
+      const email = input.email.trim().toLowerCase();
 
-      if (isLoginIdentifierRegno(raw)) {
-        const regno = raw.toUpperCase();
-        const { data: resolvedEmail, error: rpcError } = await client.rpc('resolve_login_identifier', {
-          p_regno: regno,
-        });
-
-        if (rpcError || !resolvedEmail) {
-          throw new AppError('INVALID_CREDENTIALS');
-        }
-        email = String(resolvedEmail).toLowerCase();
+      if (!/^[0-9]{2}[A-Z]{3}[0-9]{4}$/.test(regno)) {
+        throw new AppError('INVALID_CREDENTIALS');
       }
 
-      const { error } = await client.auth.signInWithPassword({
+      const { data: resolvedEmail, error: rpcError } = await client.rpc('resolve_login_identifier', {
+        p_regno: regno,
+      });
+
+      if (rpcError || !resolvedEmail) {
+        throw new AppError('INVALID_CREDENTIALS');
+      }
+
+      if (String(resolvedEmail).trim().toLowerCase() !== email) {
+        throw new AppError('INVALID_CREDENTIALS');
+      }
+
+      const { error: signInError } = await client.auth.signInWithPassword({
         email,
         password: input.password,
       });
 
-      if (error) {
+      if (signInError) {
+        throw new AppError('INVALID_CREDENTIALS');
+      }
+
+      const me = await this.getMe();
+      if (me?.role !== 'student') {
+        await this.signOut();
         throw new AppError('INVALID_CREDENTIALS');
       }
     } catch (err) {
-      throw mapSupabaseError(err);
+      if (err instanceof AppError) throw err;
+      throw new AppError('INVALID_CREDENTIALS');
+    }
+  }
+
+  async signInAdmin(input: { email: string; password: string }): Promise<void> {
+    try {
+      const client = this.getClient();
+      const email = input.email.trim().toLowerCase();
+
+      const { error: signInError } = await client.auth.signInWithPassword({
+        email,
+        password: input.password,
+      });
+
+      if (signInError) {
+        throw new AppError('INVALID_CREDENTIALS');
+      }
+
+      const me = await this.getMe();
+      if (me?.role !== 'admin') {
+        await this.signOut();
+        throw new AppError('INVALID_CREDENTIALS');
+      }
+    } catch (err) {
+      if (err instanceof AppError) throw err;
+      throw new AppError('INVALID_CREDENTIALS');
     }
   }
 

@@ -133,7 +133,7 @@ export const AdminSignup: React.FC = () => {
         </button>
       </form>
       <nav>
-        <p>Already have an account? <Link to="/login">Sign In</Link></p>
+        <p>Already have an account? <Link to="/admin/login">Admin Sign In</Link></p>
       </nav>
     </section>
   );

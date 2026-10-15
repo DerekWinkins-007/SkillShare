@@ -35,7 +35,9 @@ export interface SkillShareAPI {
     keyphrase: string;
   }): Promise<void>;
 
-  signIn(input: { identifier: string; password: string }): Promise<void>;
+  signIn(input: { regno: string; email: string; password: string }): Promise<void>;
+
+  signInAdmin(input: { email: string; password: string }): Promise<void>;
 
   signOut(): Promise<void>;
 

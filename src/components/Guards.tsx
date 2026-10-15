@@ -53,7 +53,7 @@ export const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   if (!me) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/admin/login" replace state={{ from: location }} />;
   }
 
   if (me.role !== 'admin') {

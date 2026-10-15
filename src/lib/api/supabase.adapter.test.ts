@@ -28,7 +28,7 @@ describe('SupabaseAdapter test suite', () => {
       auth: {
         signUp: vi.fn(),
         signInWithPassword: vi.fn(),
-        signOut: vi.fn(),
+        signOut: vi.fn().mockResolvedValue({ error: null }),
         getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: 'uuid-1' } } } }),
         onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       },
@@ -121,12 +121,15 @@ describe('SupabaseAdapter test suite', () => {
       });
     });
 
-    it('signIn with registration number resolves email via RPC resolve_login_identifier', async () => {
-      mockSupabase.rpc.mockResolvedValueOnce({ data: 'resolved@vit.ac.in', error: null });
+    it('signIn with valid regno and matching email resolves and signs in student', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({ data: 'student@vit.ac.in', error: null });
       mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({ data: {}, error: null });
+      mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: {} } });
+      mockSupabase.rpc.mockResolvedValueOnce({ data: { role: 'student' }, error: null });
 
       await adapter.signIn({
-        identifier: '25bce1234',
+        regno: '25bce1234',
+        email: 'student@vit.ac.in',
         password: 'Password123',
       });
 
@@ -134,24 +137,69 @@ describe('SupabaseAdapter test suite', () => {
         p_regno: '25BCE1234',
       });
       expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'resolved@vit.ac.in',
+        email: 'student@vit.ac.in',
         password: 'Password123',
       });
     });
 
-    it('signIn with email calls auth.signInWithPassword directly', async () => {
+    it('signIn throws INVALID_CREDENTIALS if email differs from resolved email', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({ data: 'different@vit.ac.in', error: null });
+
+      await expect(
+        adapter.signIn({
+          regno: '25BCE1234',
+          email: 'student@vit.ac.in',
+          password: 'Password123',
+        })
+      ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+    });
+
+    it('signIn throws INVALID_CREDENTIALS if account is admin and signs out', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({ data: 'admin@vit.ac.in', error: null });
       mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({ data: {}, error: null });
+      mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: {} } });
+      mockSupabase.rpc.mockResolvedValueOnce({ data: { role: 'admin' }, error: null });
 
-      await adapter.signIn({
-        identifier: 'student@vit.ac.in',
+      await expect(
+        adapter.signIn({
+          regno: '25BCE1234',
+          email: 'admin@vit.ac.in',
+          password: 'Password123',
+        })
+      ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+    });
+
+    it('signInAdmin signs in admin successfully', async () => {
+      mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({ data: {}, error: null });
+      mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: {} } });
+      mockSupabase.rpc.mockResolvedValueOnce({ data: { role: 'admin' }, error: null });
+
+      await adapter.signInAdmin({
+        email: 'admin@vit.ac.in',
         password: 'Password123',
       });
 
-      expect(mockSupabase.rpc).not.toHaveBeenCalled();
       expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'student@vit.ac.in',
+        email: 'admin@vit.ac.in',
         password: 'Password123',
       });
+    });
+
+    it('signInAdmin throws INVALID_CREDENTIALS if account is not admin and signs out', async () => {
+      mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({ data: {}, error: null });
+      mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: {} } });
+      mockSupabase.rpc.mockResolvedValueOnce({ data: { role: 'student' }, error: null });
+
+      await expect(
+        adapter.signInAdmin({
+          email: 'student@vit.ac.in',
+          password: 'Password123',
+        })
+      ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
+
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
     });
   });
 

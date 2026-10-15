@@ -31,7 +31,6 @@ import {
   Duration,
   intervalsOverlap,
   isCancelWindowOpen,
-  isLoginIdentifierRegno,
   isProfileComplete,
   isValidPhone,
   isValidRegno,
@@ -540,24 +539,45 @@ export class MockAdapter implements SkillShareAPI {
     notifyAuthChange(me);
   }
 
-  async signIn(input: { identifier: string; password: string }): Promise<void> {
-    const rawIdentifier = input.identifier.trim();
-    const db = this.getDb();
-    let targetUser: MockAppUser | undefined;
+  async signIn(input: { regno: string; email: string; password: string }): Promise<void> {
+    const regno = input.regno.trim().toUpperCase();
+    const email = input.email.trim().toLowerCase();
 
-    if (isLoginIdentifierRegno(rawIdentifier)) {
-      const regno = rawIdentifier.toUpperCase();
-      const signupRow = db.signup.find((s) => s.username === regno);
-      if (!signupRow) {
-        throw new AppError('INVALID_CREDENTIALS');
-      }
-      targetUser = db.app_user.find((u) => u.studentid === signupRow.studentid);
-    } else {
-      const email = rawIdentifier.toLowerCase();
-      targetUser = db.app_user.find((u) => u.email === email);
+    if (!isValidRegno(regno)) {
+      throw new AppError('INVALID_CREDENTIALS');
     }
 
-    if (!targetUser) {
+    const db = this.getDb();
+    const signupRow = db.signup.find((s) => s.username === regno);
+    if (!signupRow) {
+      throw new AppError('INVALID_CREDENTIALS');
+    }
+
+    const targetUser = db.app_user.find((u) => u.studentid === signupRow.studentid);
+    if (!targetUser || targetUser.role !== 'student') {
+      throw new AppError('INVALID_CREDENTIALS');
+    }
+
+    if (targetUser.email.toLowerCase() !== email) {
+      throw new AppError('INVALID_CREDENTIALS');
+    }
+
+    const computedHash = await hashPassword(input.password, targetUser.password_salt);
+    if (!constantTimeCompare(computedHash, targetUser.password_hash)) {
+      throw new AppError('INVALID_CREDENTIALS');
+    }
+
+    setCurrentAuthId(targetUser.auth_id);
+    const me = await this.getMe();
+    notifyAuthChange(me);
+  }
+
+  async signInAdmin(input: { email: string; password: string }): Promise<void> {
+    const email = input.email.trim().toLowerCase();
+    const db = this.getDb();
+    const targetUser = db.app_user.find((u) => u.email === email);
+
+    if (!targetUser || targetUser.role !== 'admin') {
       throw new AppError('INVALID_CREDENTIALS');
     }
 

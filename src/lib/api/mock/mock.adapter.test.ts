@@ -73,9 +73,10 @@ describe('mock.adapter.ts test suite', () => {
       await mockAdapter.signOut();
       expect(await mockAdapter.getMe()).toBeNull();
 
-      // Sign in with regno (case-insensitive in input)
+      // Sign in with regno (case-insensitive in input) and matching email
       await mockAdapter.signIn({
-        identifier: '25bce1232',
+        regno: '25bce1232',
+        email: 'student1@vit.ac.in',
         password: 'Password123',
       });
       let me = await mockAdapter.getMe();
@@ -83,9 +84,10 @@ describe('mock.adapter.ts test suite', () => {
 
       await mockAdapter.signOut();
 
-      // Sign in with email
+      // Sign in with uppercase regno
       await mockAdapter.signIn({
-        identifier: 'student1@vit.ac.in',
+        regno: '25BCE1232',
+        email: 'student1@vit.ac.in',
         password: 'Password123',
       });
       me = await mockAdapter.getMe();
@@ -96,22 +98,26 @@ describe('mock.adapter.ts test suite', () => {
       // Wrong password gives INVALID_CREDENTIALS
       await expect(
         mockAdapter.signIn({
-          identifier: '25BCE1232',
+          regno: '25BCE1232',
+          email: 'student1@vit.ac.in',
           password: 'WrongPassword1',
         })
       ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
 
-      // Wrong identifier gives INVALID_CREDENTIALS
+      // Wrong regno gives INVALID_CREDENTIALS
       await expect(
         mockAdapter.signIn({
-          identifier: '25BCE9999',
+          regno: '25BCE9999',
+          email: 'student1@vit.ac.in',
           password: 'Password123',
         })
       ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
 
+      // Wrong email gives INVALID_CREDENTIALS
       await expect(
         mockAdapter.signIn({
-          identifier: 'nonexistent@vit.ac.in',
+          regno: '25BCE1232',
+          email: 'wrong@vit.ac.in',
           password: 'Password123',
         })
       ).rejects.toThrowError(expect.objectContaining({ code: 'INVALID_CREDENTIALS' }));
@@ -211,7 +217,7 @@ describe('mock.adapter.ts test suite', () => {
 
       // Admin directly creates 'Physics' before reviewing proposal
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'admin@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signInAdmin({ email: 'admin@vit.ac.in', password: 'Password123' });
       await mockAdapter.adminCreateSkill({ name: 'Physics', categoryid: cat.categoryid });
 
       // Now approving the proposal fails with NAME_TAKEN
@@ -283,7 +289,7 @@ describe('mock.adapter.ts test suite', () => {
 
       // Sign back in as learner (studentid 101)
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'learner@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE3001', email: 'learner@vit.ac.in', password: 'Password123' });
 
       // 3. Self request -> SELF_REQUEST
       await expect(
@@ -310,19 +316,19 @@ describe('mock.adapter.ts test suite', () => {
 
       // Provider does not offer Java yet -> SKILL_NOT_OFFERED
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'learner@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE3001', email: 'learner@vit.ac.in', password: 'Password123' });
       await expect(
         mockAdapter.createRequest({ provider_studentid: 102, skillid: skill.skillid })
       ).rejects.toThrowError(expect.objectContaining({ code: 'SKILL_NOT_OFFERED' }));
 
       // Provider adds skill
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'teacher@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE3002', email: 'teacher@vit.ac.in', password: 'Password123' });
       await mockAdapter.addMySkill(skill.skillid);
 
       // Now learner can create request
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'learner@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE3001', email: 'learner@vit.ac.in', password: 'Password123' });
       const reqId = await mockAdapter.createRequest({ provider_studentid: 102, skillid: skill.skillid });
       expect(reqId).toBe(301);
 
@@ -375,7 +381,7 @@ describe('mock.adapter.ts test suite', () => {
 
       // Learner creates request
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE4001', email: 'l@vit.ac.in', password: 'Password123' });
       const reqId = await mockAdapter.createRequest({ provider_studentid: 102, skillid: skill.skillid });
 
       // Privacy check: Contact details unavailable for pending
@@ -385,7 +391,7 @@ describe('mock.adapter.ts test suite', () => {
 
       // Provider proposes slot
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'p@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE4002', email: 'p@vit.ac.in', password: 'Password123' });
 
       const slotTime = new Date(now().getTime() + 180 * 60 * 1000).toISOString(); // 3 hours in future
       await mockAdapter.respondToRequest({
@@ -412,7 +418,7 @@ describe('mock.adapter.ts test suite', () => {
 
       // Learner agrees to slot
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE4001', email: 'l@vit.ac.in', password: 'Password123' });
       await mockAdapter.respondToSlot({ requestid: reqId, agree: true });
 
       reqView = await mockAdapter.getRequest(reqId);
@@ -478,11 +484,11 @@ describe('mock.adapter.ts test suite', () => {
 
       // Create request and confirm it
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l5@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE5001', email: 'l5@vit.ac.in', password: 'Password123' });
       const reqId = await mockAdapter.createRequest({ provider_studentid: 102, skillid: skill.skillid });
 
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'p5@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE5002', email: 'p5@vit.ac.in', password: 'Password123' });
       const slotTime = new Date(now().getTime() + 180 * 60 * 1000).toISOString();
       await mockAdapter.respondToRequest({
         requestid: reqId,
@@ -491,7 +497,7 @@ describe('mock.adapter.ts test suite', () => {
       });
 
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l5@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE5001', email: 'l5@vit.ac.in', password: 'Password123' });
       await mockAdapter.respondToSlot({ requestid: reqId, agree: true });
 
       // Feedback on confirmed (not completed yet) -> FEEDBACK_NOT_ALLOWED
@@ -508,14 +514,14 @@ describe('mock.adapter.ts test suite', () => {
 
       // Provider tries to submit feedback -> FEEDBACK_NOT_ALLOWED
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'p5@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE5002', email: 'p5@vit.ac.in', password: 'Password123' });
       await expect(
         mockAdapter.submitFeedback({ requestid: reqId, rating: 5, comments: 'Good student' })
       ).rejects.toThrowError(expect.objectContaining({ code: 'FEEDBACK_NOT_ALLOWED' }));
 
       // Requester submits feedback -> succeeds
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l5@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE5001', email: 'l5@vit.ac.in', password: 'Password123' });
       await mockAdapter.submitFeedback({ requestid: reqId, rating: 5, comments: 'Excellent tutor!' });
 
       // Submitting again throws FEEDBACK_EXISTS
@@ -573,11 +579,11 @@ describe('mock.adapter.ts test suite', () => {
 
       // 1. Create a request that will be confirmed
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l6@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE6001', email: 'l6@vit.ac.in', password: 'Password123' });
       const reqConfirmedId = await mockAdapter.createRequest({ provider_studentid: 102, skillid: skill.skillid });
 
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'p6@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE6002', email: 'p6@vit.ac.in', password: 'Password123' });
       const meetingTime1 = new Date(now().getTime() + 150 * 60 * 1000).toISOString(); // 2.5 hours in future
       await mockAdapter.respondToRequest({
         requestid: reqConfirmedId,
@@ -586,7 +592,7 @@ describe('mock.adapter.ts test suite', () => {
       });
 
       await mockAdapter.signOut();
-      await mockAdapter.signIn({ identifier: 'l6@vit.ac.in', password: 'Password123' });
+      await mockAdapter.signIn({ regno: '25BCE6001', email: 'l6@vit.ac.in', password: 'Password123' });
       await mockAdapter.respondToSlot({ requestid: reqConfirmedId, agree: true });
 
       // Advance clock by 190 minutes: meeting ended at 150 + 30 = 180 min

@@ -12,6 +12,7 @@ import { Layout } from './components/Layout';
 
 // Pages
 import { Login } from './pages/Login';
+import { AdminLogin } from './pages/AdminLogin';
 import { StudentSignup } from './pages/StudentSignup';
 import { AdminSignup } from './pages/AdminSignup';
 import { ProfileSetup } from './pages/ProfileSetup';
@@ -61,6 +62,14 @@ export const App: React.FC = () => {
               element={
                 <SignedOutOnly>
                   <StudentSignup />
+                </SignedOutOnly>
+              }
+            />
+            <Route
+              path="/admin/login"
+              element={
+                <SignedOutOnly>
+                  <AdminLogin />
                 </SignedOutOnly>
               }
             />
