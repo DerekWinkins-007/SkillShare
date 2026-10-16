@@ -29,13 +29,13 @@
 | 22 | 22-proposals-category-requests-tab | `/proposals` Category Requests → `StudentProposals.tsx` | DONE | Restyled with category requests table and dialog trigger |
 | 23 | 23-proposals-skill-proposals-tab | `/proposals` Skill Proposals → `StudentProposals.tsx` | DONE | Restyled with skill proposals table and dialog trigger |
 | 24 | 24-reports-student | `/reports` (student) → `Reports.tsx` | DONE | Restyled with report selector, SQL preview, and results table |
-| 25 | 25-admin-overview | `/admin` → `AdminDashboard.tsx` | TODO | |
-| 26 | 26-admin-categories-tab | `/admin/categories` Categories → `AdminCategories.tsx` | TODO | |
-| 27 | 27-admin-category-requests-tab | `/admin/categories` Category Requests → `AdminCategories.tsx` | TODO | |
-| 28 | 28-admin-skills-tab | `/admin/skills` Skills → `AdminSkills.tsx` | TODO | |
-| 29 | 29-admin-skill-proposals-tab | `/admin/skills` Skill Proposals → `AdminSkills.tsx` | TODO | |
-| 30 | 30-admin-requests | `/admin/requests` → `AdminRequests.tsx` | TODO | |
-| 31 | 31-admin-students | `/admin/students` → `AdminStudents.tsx` | TODO | |
+| 25 | 25-admin-overview | `/admin` → `AdminDashboard.tsx` | DONE | Restyled with StatCards, system aggregates, status breakdown table |
+| 26 | 26-admin-categories-tab | `/admin/categories` Categories → `AdminCategories.tsx` | DONE | Restyled with category listing, creation dialog, and deletion dialog |
+| 27 | 27-admin-category-requests-tab | `/admin/categories` Category Requests → `AdminCategories.tsx` | DONE | Restyled with review queue, approve/reject mutations, and note input |
+| 28 | 28-admin-skills-tab | `/admin/skills` Skills → `AdminSkills.tsx` | DONE | Restyled with skills table, creation dialog, and deletion dialog |
+| 29 | 29-admin-skill-proposals-tab | `/admin/skills` Skill Proposals → `AdminSkills.tsx` | DONE | Restyled with proposals review queue, note input, approve/reject |
+| 30 | 30-admin-requests | `/admin/requests` → `AdminRequests.tsx` | DONE | Restyled with status filter, oversight table, and status badges |
+| 31 | 31-admin-students | `/admin/students` → `AdminStudents.tsx` | DONE | Restyled with student roster table, profile complete badges |
 | 32 | 32-reports-admin | `/reports` (admin) → `Reports.tsx` | DONE | Restyled with identical institutional reporting capabilities |
 | 33 | 33-notification-panel-and-account-menu | Notification panel + account menu → `Layout.tsx` | TODO | |
 | 34 | 34-dialog-request-new-category | Dialog: Request new category → `StudentProposals.tsx` | DONE | Restyled category request modal with validation |
@@ -48,11 +48,11 @@
 | 41 | 41-dialog-reject-request | Dialog: Reject request → `RequestDetail.tsx` | DONE | Integrated reject mutation with status badge update |
 | 42 | 42-dialog-decline-slot | Dialog: Decline slot → `RequestDetail.tsx` | DONE | Integrated decline mutation |
 | 43 | 43-dialog-give-feedback | Dialog: Give feedback → `RequestDetail.tsx` / `Layout.tsx` | DONE | Restyled feedback dialog and rating controls |
-| 44 | 44-dialog-add-category | Dialog: Add category → `AdminCategories.tsx` | TODO | |
-| 45 | 45-dialog-delete-category | Dialog: Delete category → `AdminCategories.tsx` | TODO | |
-| 46 | 46-dialog-add-skill | Dialog: Add skill → `AdminSkills.tsx` | TODO | |
-| 47 | 47-dialog-delete-skill | Dialog: Delete skill → `AdminSkills.tsx` | TODO | |
-| 48 | 48-dialog-review-proposal | Dialog: Review proposal → `AdminSkills.tsx` / `AdminCategories.tsx` | TODO | |
+| 44 | 44-dialog-add-category | Dialog: Add category → `AdminCategories.tsx` | DONE | Restyled add category dialog with validation |
+| 45 | 45-dialog-delete-category | Dialog: Delete category → `AdminCategories.tsx` | DONE | Restyled delete category confirmation dialog |
+| 46 | 46-dialog-add-skill | Dialog: Add skill → `AdminSkills.tsx` | DONE | Restyled add skill dialog with category selector |
+| 47 | 47-dialog-delete-skill | Dialog: Delete skill → `AdminSkills.tsx` | DONE | Restyled delete skill confirmation dialog |
+| 48 | 48-dialog-review-proposal | Dialog: Review proposal → `AdminSkills.tsx` / `AdminCategories.tsx` | DONE | Integrated review actions with note inputs |
 
 ## Implementation Rules
 - Visual layer only: no logic/hook/API/type changes.
