@@ -6,6 +6,16 @@ import { queryKeys } from '../lib/queryKeys';
 import { allowedActions, canGiveFeedback, validateSlot, Duration } from '../lib/rules';
 import { now } from '../lib/clock';
 import { AppError, errorMessages, Mode } from '../lib/types';
+import {
+  Button,
+  TextField,
+  TextareaField,
+  SelectField,
+  StatusBadge,
+  Dialog,
+  ErrorBanner,
+  Skeleton,
+} from '../components/ui';
 
 export const RequestDetail: React.FC = () => {
   const { requestid } = useParams<{ requestid: string }>();
@@ -123,15 +133,29 @@ export const RequestDetail: React.FC = () => {
   });
 
   if (isNaN(idNum) || idNum <= 0) {
-    return <p role="alert">Invalid request ID.</p>;
+    return (
+      <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl">
+        <ErrorBanner message="Invalid request ID." />
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <p>Loading request details...</p>;
+    return (
+      <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl flex flex-col gap-space-lg">
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+      </div>
+    );
   }
 
   if (reqError || !request) {
-    return <p role="alert">Request not found or access denied.</p>;
+    return (
+      <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl">
+        <ErrorBanner message="Request not found or access denied." />
+      </div>
+    );
   }
 
   const actions = allowedActions(request, now());
@@ -200,276 +224,474 @@ export const RequestDetail: React.FC = () => {
   };
 
   return (
-    <section>
-      <h1>Request #{request.requestid}: {request.skillname}</h1>
-      {actionError && <p role="alert" data-testid="request-error">{actionError}</p>}
+    <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl flex flex-col gap-space-lg">
+      {/* Back Link */}
+      <nav aria-label="Breadcrumb">
+        <Link
+          to="/requests"
+          className="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary hover:text-primary-container transition-colors w-fit"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span>Back to Requests List</span>
+        </Link>
+      </nav>
 
-      <section>
-        <h2>Status &amp; Role</h2>
-        <p>Status: <strong data-testid="request-detail-status">{request.status}</strong></p>
-        <p>My Role: <strong>{request.my_role === 'requester' ? 'Requester (Learner)' : 'Provider (Teacher)'}</strong></p>
-        <p>
-          Counterpart:{' '}
-          <Link to={`/students/${request.counterpart_studentid}`}>
-            {request.counterpart_fname} {request.counterpart_lname}
-          </Link>{' '}
-          ({request.counterpart_dept}, Year {request.counterpart_year})
-        </p>
-        <p>Created: {new Date(request.requestdate).toLocaleString()}</p>
-        {request.cancel_reason && (
-          <p>Cancellation Reason: <strong>{request.cancel_reason}</strong></p>
+      {/* Header Card */}
+      <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm border-b border-surface-container-high">
+          <div>
+            <span className="font-code-sm text-code-sm text-secondary font-medium">
+              REQUEST #{request.requestid}
+            </span>
+            <h1 className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
+              Request #{request.requestid}: {request.skillname}
+            </h1>
+          </div>
+          <div className="flex items-center gap-space-xs">
+            <StatusBadge status={request.status} data-testid="request-detail-status" />
+          </div>
+        </div>
+
+        {actionError && (
+          <ErrorBanner
+            message={actionError}
+            data-testid="request-error"
+            onDismiss={() => setActionError(null)}
+          />
+        )}
+
+        {/* Status & Role Summary Details */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+          <div className="flex flex-col">
+            <span className="font-label-sm text-label-sm text-secondary">My Role</span>
+            <strong className="font-body-md text-body-md text-on-surface font-semibold">
+              {request.my_role === 'requester' ? 'Requester (Learner)' : 'Provider (Teacher)'}
+            </strong>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="font-label-sm text-label-sm text-secondary">Counterpart</span>
+            <Link
+              to={`/students/${request.counterpart_studentid}`}
+              className="font-body-md text-body-md text-primary-container font-semibold hover:underline"
+            >
+              {request.counterpart_fname} {request.counterpart_lname}
+            </Link>
+            <span className="font-body-sm text-body-sm text-secondary">
+              {request.counterpart_dept}, Year {request.counterpart_year}
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="font-label-sm text-label-sm text-secondary">Created Date</span>
+            <span className="font-body-md text-body-md text-on-surface">
+              {new Date(request.requestdate).toLocaleString(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </span>
+          </div>
+
+          {request.cancel_reason && (
+            <div className="flex flex-col">
+              <span className="font-label-sm text-label-sm text-error font-medium">Cancellation Reason</span>
+              <strong className="font-body-md text-body-md text-on-surface">
+                {request.cancel_reason}
+              </strong>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Available Actions Bar */}
+      <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+        <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
+          Available Actions
+        </h2>
+
+        {actions.length === 0 && !feedbackAllowed ? (
+          <p className="font-body-sm text-body-sm text-secondary py-1">
+            No actions available for this request.
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-space-sm pt-2">
+            {actions.includes('accept') && (
+              <Button
+                type="button"
+                data-testid="request-action-accept"
+                onClick={() => setShowSlotForm(true)}
+              >
+                <span className="material-symbols-outlined text-[18px]">event</span>
+                <span>Accept &amp; Propose Slot</span>
+              </Button>
+            )}
+
+            {actions.includes('reject') && (
+              <Button
+                type="button"
+                variant="danger"
+                data-testid="request-action-reject"
+                disabled={respondMutation.isPending}
+                isLoading={respondMutation.isPending}
+                onClick={() => respondMutation.mutate({ accept: false })}
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+                <span>Reject Request</span>
+              </Button>
+            )}
+
+            {actions.includes('agree') && (
+              <Button
+                type="button"
+                data-testid="request-action-agree"
+                disabled={slotAgreeMutation.isPending}
+                isLoading={slotAgreeMutation.isPending}
+                onClick={() => slotAgreeMutation.mutate(true)}
+              >
+                <span className="material-symbols-outlined text-[18px]">check</span>
+                <span>Agree to Slot</span>
+              </Button>
+            )}
+
+            {actions.includes('decline') && (
+              <Button
+                type="button"
+                variant="outline"
+                data-testid="request-action-decline"
+                disabled={slotAgreeMutation.isPending}
+                isLoading={slotAgreeMutation.isPending}
+                onClick={() => slotAgreeMutation.mutate(false)}
+              >
+                <span className="material-symbols-outlined text-[18px]">cancel</span>
+                <span>Decline Slot</span>
+              </Button>
+            )}
+
+            {actions.includes('cancel') && (
+              <Button
+                type="button"
+                variant="outline"
+                data-testid="request-action-cancel"
+                onClick={() => setShowCancelForm(true)}
+                className="hover:text-error hover:border-status-danger-border"
+              >
+                <span className="material-symbols-outlined text-[18px]">block</span>
+                <span>Cancel Session</span>
+              </Button>
+            )}
+          </div>
         )}
       </section>
 
-      {/* Meeting Slot Info */}
+      {/* Meeting Slot Information */}
       {request.meeting_time && (
-        <section data-testid="request-detail-meeting">
-          <h2>Meeting Details</h2>
-          <ul>
-            <li>Date &amp; Time: {new Date(request.meeting_time).toLocaleString()}</li>
-            <li>Duration: {request.duration_minutes} minutes</li>
-            <li>Mode: {request.mode}</li>
-            {request.mode === 'offline' && <li>Location: {request.location}</li>}
+        <section
+          data-testid="request-detail-meeting"
+          className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md"
+        >
+          <div className="flex items-center gap-space-xs pb-space-sm border-b border-surface-container-high">
+            <span className="material-symbols-outlined text-primary-container text-[20px]">schedule</span>
+            <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
+              Meeting Details
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+            <div>
+              <span className="font-label-sm text-label-sm text-secondary">Date &amp; Time</span>
+              <p className="font-body-md text-body-md text-on-surface font-semibold">
+                {new Date(request.meeting_time).toLocaleString(undefined, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </p>
+            </div>
+
+            <div>
+              <span className="font-label-sm text-label-sm text-secondary">Duration</span>
+              <p className="font-body-md text-body-md text-on-surface font-semibold">
+                {request.duration_minutes} minutes
+              </p>
+            </div>
+
+            <div>
+              <span className="font-label-sm text-label-sm text-secondary">Mode</span>
+              <p className="font-body-md text-body-md text-on-surface capitalize font-semibold">
+                {request.mode}
+              </p>
+            </div>
+
+            {request.mode === 'offline' && (
+              <div>
+                <span className="font-label-sm text-label-sm text-secondary">Location</span>
+                <p className="font-body-md text-body-md text-on-surface font-semibold">
+                  {request.location}
+                </p>
+              </div>
+            )}
+
             {request.mode === 'online' && (
-              <li>
-                Link:{' '}
-                {request.meeting_link ? (
-                  <a href={request.meeting_link} target="_blank" rel="noreferrer">
-                    {request.meeting_link}
-                  </a>
-                ) : (
-                  'None provided'
-                )}
-              </li>
+              <div>
+                <span className="font-label-sm text-label-sm text-secondary">Meeting Link</span>
+                <p className="font-body-md text-body-md text-on-surface font-semibold truncate">
+                  {request.meeting_link ? (
+                    <a
+                      href={request.meeting_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary-container hover:underline"
+                    >
+                      {request.meeting_link}
+                    </a>
+                  ) : (
+                    'None provided'
+                  )}
+                </p>
+              </div>
             )}
+
             {request.cancel_deadline && (
-              <li>Cancellation Deadline: {new Date(request.cancel_deadline).toLocaleString()}</li>
+              <div>
+                <span className="font-label-sm text-label-sm text-secondary">Cancellation Deadline</span>
+                <p className="font-body-md text-body-md text-secondary">
+                  {new Date(request.cancel_deadline).toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </p>
+              </div>
             )}
-          </ul>
+          </div>
         </section>
       )}
 
       {/* Contact Details (Available only when confirmed or completed) */}
       {isConfirmedOrCompleted && contact && (
-        <section data-testid="request-contact-section">
-          <h2>Counterpart Contact Information</h2>
-          <ul>
-            <li>Name: {contact.fname} {contact.lname}</li>
-            <li>Department: {contact.dept} (Year {contact.year})</li>
-            <li>Phone 1: <strong data-testid="request-contact-phone1">{contact.phone1}</strong></li>
-            {contact.phone2 && <li>Phone 2: <strong data-testid="request-contact-phone2">{contact.phone2}</strong></li>}
-            <li>Email 1: <strong data-testid="request-contact-email1">{contact.email1}</strong></li>
-            {contact.email2 && <li>Email 2: <strong data-testid="request-contact-email2">{contact.email2}</strong></li>}
-          </ul>
+        <section
+          data-testid="request-contact-section"
+          className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md"
+        >
+          <div className="flex items-center gap-space-xs pb-space-sm border-b border-surface-container-high">
+            <span className="material-symbols-outlined text-primary-container text-[20px]">contacts</span>
+            <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
+              Counterpart Contact Information
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+            <div>
+              <span className="font-label-sm text-label-sm text-secondary">Full Name</span>
+              <p className="font-body-md text-body-md text-on-surface font-semibold">
+                {contact.fname} {contact.lname}
+              </p>
+              <span className="font-body-sm text-body-sm text-secondary">
+                {contact.dept} (Year {contact.year})
+              </span>
+            </div>
+
+            <div>
+              <span className="font-label-sm text-label-sm text-secondary">Phone 1</span>
+              <p className="font-body-md text-body-md text-on-surface">
+                <strong data-testid="request-contact-phone1">{contact.phone1}</strong>
+              </p>
+              {contact.phone2 && (
+                <p className="font-body-sm text-body-sm text-secondary mt-1">
+                  Phone 2: <strong data-testid="request-contact-phone2">{contact.phone2}</strong>
+                </p>
+              )}
+            </div>
+
+            <div>
+              <span className="font-label-sm text-label-sm text-secondary">Primary Email</span>
+              <p className="font-body-md text-body-md text-on-surface truncate">
+                <strong data-testid="request-contact-email1">{contact.email1}</strong>
+              </p>
+              {contact.email2 && (
+                <p className="font-body-sm text-body-sm text-secondary mt-1 truncate">
+                  Email 2: <strong data-testid="request-contact-email2">{contact.email2}</strong>
+                </p>
+              )}
+            </div>
+          </div>
         </section>
       )}
 
-      {/* Allowed Actions */}
-      <section>
-        <h2>Available Actions</h2>
-        {actions.length === 0 && !feedbackAllowed && (
-          <p>No actions available for this request.</p>
-        )}
-
-        {actions.includes('accept') && (
-          <button
-            type="button"
-            data-testid="request-action-accept"
-            onClick={() => setShowSlotForm(true)}
-          >
-            Accept &amp; Propose Slot
-          </button>
-        )}
-
-        {actions.includes('reject') && (
-          <button
-            type="button"
-            data-testid="request-action-reject"
-            onClick={() => respondMutation.mutate({ accept: false })}
-          >
-            Reject Request
-          </button>
-        )}
-
-        {actions.includes('agree') && (
-          <button
-            type="button"
-            data-testid="request-action-agree"
-            onClick={() => slotAgreeMutation.mutate(true)}
-          >
-            Agree to Slot
-          </button>
-        )}
-
-        {actions.includes('decline') && (
-          <button
-            type="button"
-            data-testid="request-action-decline"
-            onClick={() => slotAgreeMutation.mutate(false)}
-          >
-            Decline Slot
-          </button>
-        )}
-
-        {actions.includes('cancel') && (
-          <button
-            type="button"
-            data-testid="request-action-cancel"
-            onClick={() => setShowCancelForm(true)}
-          >
-            Cancel Session
-          </button>
-        )}
-      </section>
-
-      {/* Slot Proposal Form Dialog */}
-      {showSlotForm && (
-        <dialog open>
-          <h3>Propose Meeting Slot</h3>
-          <form onSubmit={handleProposeSlotSubmit}>
-            <div>
-              <label htmlFor="slot-time">Meeting Date &amp; Time:</label>
-              <input
-                id="slot-time"
-                type="datetime-local"
-                data-testid="slot-time"
-                required
-                value={slotTime}
-                onChange={(e) => setSlotTime(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="slot-duration">Duration (minutes):</label>
-              <select
-                id="slot-duration"
-                data-testid="slot-duration"
-                value={slotDuration}
-                onChange={(e) => setSlotDuration(Number(e.target.value) as Duration)}
-              >
-                <option value={30}>30</option>
-                <option value={45}>45</option>
-                <option value={60}>60</option>
-                <option value={90}>90</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="slot-mode">Mode:</label>
-              <select
-                id="slot-mode"
-                data-testid="slot-mode"
-                value={slotMode}
-                onChange={(e) => setSlotMode(e.target.value as Mode)}
-              >
-                <option value="online">Online</option>
-                <option value="offline">Offline</option>
-              </select>
-            </div>
-
-            {slotMode === 'offline' && (
-              <div>
-                <label htmlFor="slot-location">Location (required for offline):</label>
-                <input
-                  id="slot-location"
-                  type="text"
-                  data-testid="slot-location"
-                  required
-                  maxLength={150}
-                  value={slotLocation}
-                  onChange={(e) => setSlotLocation(e.target.value)}
-                />
-              </div>
-            )}
-
-            {slotMode === 'online' && (
-              <div>
-                <label htmlFor="slot-link">Meeting Link (optional):</label>
-                <input
-                  id="slot-link"
-                  type="url"
-                  data-testid="slot-link"
-                  maxLength={200}
-                  value={slotLink}
-                  onChange={(e) => setSlotLink(e.target.value)}
-                />
-              </div>
-            )}
-
-            <button type="submit" data-testid="slot-submit" disabled={respondMutation.isPending}>
-              {respondMutation.isPending ? 'Submitting...' : 'Submit Proposed Slot'}
-            </button>
-            <button type="button" onClick={() => setShowSlotForm(false)}>
-              Cancel
-            </button>
-          </form>
-        </dialog>
-      )}
-
-      {/* Cancel Form Dialog */}
-      {showCancelForm && (
-        <dialog open>
-          <h3>Cancel Request</h3>
-          <form onSubmit={handleCancelSubmit}>
-            <div>
-              <label htmlFor="cancel-reason">Reason for cancellation (1-200 chars):</label>
-              <textarea
-                id="cancel-reason"
-                data-testid="cancel-reason"
-                required
-                maxLength={200}
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-              />
-            </div>
-            <button type="submit" data-testid="cancel-submit" disabled={cancelMutation.isPending}>
-              {cancelMutation.isPending ? 'Cancelling...' : 'Confirm Cancellation'}
-            </button>
-            <button type="button" onClick={() => setShowCancelForm(false)}>
-              Back
-            </button>
-          </form>
-        </dialog>
-      )}
-
-      {/* Feedback Form for Requester on Completed */}
+      {/* Feedback Section for Requester on Completed */}
       {feedbackAllowed && (
-        <section>
-          <h2>Submit Session Feedback</h2>
-          <form onSubmit={handleFeedbackSubmit}>
-            <div>
-              <label htmlFor="detail-feedback-rating">Rating (1 to 5):</label>
-              <select
-                id="detail-feedback-rating"
-                data-testid="feedback-rating"
-                value={feedbackRating}
-                onChange={(e) => setFeedbackRating(Number(e.target.value))}
-              >
-                <option value={5}>5</option>
-                <option value={4}>4</option>
-                <option value={3}>3</option>
-                <option value={2}>2</option>
-                <option value={1}>1</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="detail-feedback-comments">Comments (optional, max 100):</label>
-              <textarea
-                id="detail-feedback-comments"
-                data-testid="feedback-comments"
-                maxLength={100}
-                value={feedbackComments}
-                onChange={(e) => setFeedbackComments(e.target.value)}
-              />
-            </div>
-            <button type="submit" data-testid="feedback-submit" disabled={feedbackMutation.isPending}>
-              {feedbackMutation.isPending ? 'Submitting...' : 'Submit Feedback'}
-            </button>
+        <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+          <div className="flex items-center gap-space-xs pb-space-sm border-b border-surface-container-high">
+            <span className="material-symbols-outlined text-primary-container text-[20px]">rate_review</span>
+            <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
+              Submit Session Feedback
+            </h2>
+          </div>
+
+          <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-space-md max-w-lg">
+            <SelectField
+              id="detail-feedback-rating"
+              label="Rating (1 to 5)"
+              data-testid="feedback-rating"
+              value={feedbackRating}
+              onChange={(e) => setFeedbackRating(Number(e.target.value))}
+            >
+              <option value={5}>5 - Excellent session</option>
+              <option value={4}>4 - Very good</option>
+              <option value={3}>3 - Average</option>
+              <option value={2}>2 - Below expectations</option>
+              <option value={1}>1 - Poor experience</option>
+            </SelectField>
+
+            <TextareaField
+              id="detail-feedback-comments"
+              label="Comments (optional, max 100)"
+              maxChars={100}
+              data-testid="feedback-comments"
+              value={feedbackComments}
+              onChange={(e) => setFeedbackComments(e.target.value)}
+              placeholder="Share your experience..."
+            />
+
+            <Button
+              type="submit"
+              data-testid="feedback-submit"
+              disabled={feedbackMutation.isPending}
+              isLoading={feedbackMutation.isPending}
+              className="self-start"
+            >
+              Submit Feedback
+            </Button>
           </form>
         </section>
       )}
 
-      <nav>
-        <Link to="/requests">Back to Requests List</Link>
-      </nav>
-    </section>
+      {/* Slot Proposal Form Dialog (Frames 38 & 39) */}
+      <Dialog
+        isOpen={showSlotForm}
+        onClose={() => setShowSlotForm(false)}
+        title="Propose Meeting Slot"
+        description="Choose a date, duration, and whether the session will be in person or online."
+      >
+        <form onSubmit={handleProposeSlotSubmit} className="flex flex-col gap-space-md">
+          <TextField
+            id="slot-time"
+            label="Meeting Date &amp; Time"
+            type="datetime-local"
+            required
+            data-testid="slot-time"
+            value={slotTime}
+            onChange={(e) => setSlotTime(e.target.value)}
+          />
+
+          <SelectField
+            id="slot-duration"
+            label="Duration"
+            data-testid="slot-duration"
+            value={slotDuration}
+            onChange={(e) => setSlotDuration(Number(e.target.value) as Duration)}
+          >
+            <option value={30}>30 minutes</option>
+            <option value={45}>45 minutes</option>
+            <option value={60}>60 minutes</option>
+            <option value={90}>90 minutes</option>
+          </SelectField>
+
+          <SelectField
+            id="slot-mode"
+            label="Mode"
+            data-testid="slot-mode"
+            value={slotMode}
+            onChange={(e) => setSlotMode(e.target.value as Mode)}
+          >
+            <option value="online">Online (Video link)</option>
+            <option value="offline">Offline (Campus location)</option>
+          </SelectField>
+
+          {slotMode === 'offline' && (
+            <TextField
+              id="slot-location"
+              label="Location"
+              helperText="Campus building, library discussion room, etc."
+              required
+              maxLength={150}
+              data-testid="slot-location"
+              value={slotLocation}
+              onChange={(e) => setSlotLocation(e.target.value)}
+              placeholder="e.g. Central Library 2nd Floor Room B"
+            />
+          )}
+
+          {slotMode === 'online' && (
+            <TextField
+              id="slot-link"
+              label="Meeting Link (optional)"
+              type="url"
+              maxLength={200}
+              data-testid="slot-link"
+              value={slotLink}
+              onChange={(e) => setSlotLink(e.target.value)}
+              placeholder="https://meet.google.com/..."
+            />
+          )}
+
+          <div className="flex items-center justify-end gap-space-sm pt-space-xs">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowSlotForm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              data-testid="slot-submit"
+              disabled={respondMutation.isPending}
+              isLoading={respondMutation.isPending}
+            >
+              Submit Proposed Slot
+            </Button>
+          </div>
+        </form>
+      </Dialog>
+
+      {/* Cancel Form Dialog (Frame 40) */}
+      <Dialog
+        isOpen={showCancelForm}
+        onClose={() => setShowCancelForm(false)}
+        title="Cancel Session Request"
+        description="Please provide a brief reason for cancellation so your peer is informed."
+      >
+        <form onSubmit={handleCancelSubmit} className="flex flex-col gap-space-md">
+          <TextareaField
+            id="cancel-reason"
+            label="Reason for cancellation"
+            required
+            maxChars={200}
+            data-testid="cancel-reason"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="e.g. Schedule conflict with exams..."
+          />
+
+          <div className="flex items-center justify-end gap-space-sm pt-space-xs">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowCancelForm(false)}
+            >
+              Back
+            </Button>
+            <Button
+              type="submit"
+              variant="danger"
+              data-testid="cancel-submit"
+              disabled={cancelMutation.isPending}
+              isLoading={cancelMutation.isPending}
+            >
+              Confirm Cancellation
+            </Button>
+          </div>
+        </form>
+      </Dialog>
+    </div>
   );
 };

@@ -18,14 +18,14 @@
 | 11 | 11-catalogue-browse-tab | `/catalogue` Browse tab → `Catalogue.tsx` | DONE | Restyled with categories sidebar, search, and available skills table |
 | 12 | 12-catalogue-my-skills-tab | `/catalogue` My Skills tab → `Catalogue.tsx` | DONE | Restyled with teaching skills list, add action, and empty state |
 | 13 | 13-skill-detail | `/skills/:skillid` → `SkillDetail.tsx` | DONE | Restyled with category pill, providers table, ratings, and request actions |
-| 14 | 14-requests-received-tab | `/requests` Received tab → `RequestsList.tsx` | TODO | |
-| 15 | 15-requests-sent-tab | `/requests` Sent tab → `RequestsList.tsx` | TODO | |
-| 16 | 16-request-pending-provider | `/requests/:requestid` (pending, provider) → `RequestDetail.tsx` | TODO | |
-| 17 | 17-request-pending-requester | `/requests/:requestid` (pending, requester) → `RequestDetail.tsx` | TODO | |
-| 18 | 18-request-accepted-requester | `/requests/:requestid` (accepted, requester) → `RequestDetail.tsx` | TODO | |
-| 19 | 19-request-confirmed | `/requests/:requestid` (confirmed) → `RequestDetail.tsx` | TODO | |
-| 20 | 20-request-completed-no-feedback | `/requests/:requestid` (completed) → `RequestDetail.tsx` | TODO | |
-| 21 | 21-request-cancelled | `/requests/:requestid` (cancelled) → `RequestDetail.tsx` | TODO | |
+| 14 | 14-requests-received-tab | `/requests` Received tab → `RequestsList.tsx` | DONE | Restyled with segmented tabs, status filter, and requests table |
+| 15 | 15-requests-sent-tab | `/requests` Sent tab → `RequestsList.tsx` | DONE | Restyled with sent requests view and status badge |
+| 16 | 16-request-pending-provider | `/requests/:requestid` (pending, provider) → `RequestDetail.tsx` | DONE | Restyled with action buttons and slot proposal dialog |
+| 17 | 17-request-pending-requester | `/requests/:requestid` (pending, requester) → `RequestDetail.tsx` | DONE | Restyled pending view for learner with role indicators |
+| 18 | 18-request-accepted-requester | `/requests/:requestid` (accepted, requester) → `RequestDetail.tsx` | DONE | Restyled with slot agreement and decline controls |
+| 19 | 19-request-confirmed | `/requests/:requestid` (confirmed) → `RequestDetail.tsx` | DONE | Restyled with meeting details and counterpart contact card |
+| 20 | 20-request-completed-no-feedback | `/requests/:requestid` (completed) → `RequestDetail.tsx` | DONE | Restyled with feedback submission form and rating |
+| 21 | 21-request-cancelled | `/requests/:requestid` (cancelled) → `RequestDetail.tsx` | DONE | Restyled with cancellation reason banner |
 | 22 | 22-proposals-category-requests-tab | `/proposals` Category Requests → `StudentProposals.tsx` | TODO | |
 | 23 | 23-proposals-skill-proposals-tab | `/proposals` Skill Proposals → `StudentProposals.tsx` | TODO | |
 | 24 | 24-reports-student | `/reports` (student) → `Reports.tsx` | TODO | |
@@ -42,12 +42,12 @@
 | 35 | 35-dialog-propose-new-skill | Dialog: Propose new skill → `StudentProposals.tsx` | TODO | |
 | 36 | 36-dialog-add-skills | Dialog: Add skills → `ProfileSetup`/`Edit`/`Catalogue` | TODO | |
 | 37 | 37-dialog-send-skill-request | Dialog: Send skill request → `SkillDetail.tsx` | DONE | Restyled request session triggers with mutation feedback |
-| 38 | 38-dialog-propose-slot-offline | Dialog: Propose slot (offline) → `RequestDetail.tsx` | TODO | |
-| 39 | 39-dialog-propose-slot-online | Dialog: Propose slot (online) → `RequestDetail.tsx` | TODO | |
-| 40 | 40-dialog-cancel-request | Dialog: Cancel request → `RequestDetail.tsx` | TODO | |
-| 41 | 41-dialog-reject-request | Dialog: Reject request → `RequestDetail.tsx` | TODO | |
-| 42 | 42-dialog-decline-slot | Dialog: Decline slot → `RequestDetail.tsx` | TODO | |
-| 43 | 43-dialog-give-feedback | Dialog: Give feedback → `RequestDetail.tsx` / `Layout.tsx` | TODO | |
+| 38 | 38-dialog-propose-slot-offline | Dialog: Propose slot (offline) → `RequestDetail.tsx` | DONE | Restyled offline slot proposal with location input |
+| 39 | 39-dialog-propose-slot-online | Dialog: Propose slot (online) → `RequestDetail.tsx` | DONE | Restyled online slot proposal with video link input |
+| 40 | 40-dialog-cancel-request | Dialog: Cancel request → `RequestDetail.tsx` | DONE | Restyled cancel dialog with validation |
+| 41 | 41-dialog-reject-request | Dialog: Reject request → `RequestDetail.tsx` | DONE | Integrated reject mutation with status badge update |
+| 42 | 42-dialog-decline-slot | Dialog: Decline slot → `RequestDetail.tsx` | DONE | Integrated decline mutation |
+| 43 | 43-dialog-give-feedback | Dialog: Give feedback → `RequestDetail.tsx` / `Layout.tsx` | DONE | Restyled feedback dialog and rating controls |
 | 44 | 44-dialog-add-category | Dialog: Add category → `AdminCategories.tsx` | TODO | |
 | 45 | 45-dialog-delete-category | Dialog: Delete category → `AdminCategories.tsx` | TODO | |
 | 46 | 46-dialog-add-skill | Dialog: Add skill → `AdminSkills.tsx` | TODO | |
