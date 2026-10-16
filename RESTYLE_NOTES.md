@@ -13,8 +13,8 @@
 | 06 | 06-profile-setup-step-2-contact | `/profile/setup` step 2 → `ProfileSetup.tsx` | DONE | Restyled with contact info fields, helpers, and validation |
 | 07 | 07-profile-setup-step-3-skills | `/profile/setup` step 3 → `ProfileSetup.tsx` | DONE | Restyled with my-skills chips and searchable catalogue table |
 | 08 | 08-profile-edit | `/profile/edit` → `ProfileEdit.tsx` | DONE | Restyled with high fidelity 2-column layout and status alerts |
-| 09 | 09-dashboard | `/dashboard` → `StudentDashboard.tsx` | TODO | |
-| 10 | 10-public-profile | `/students/:studentid` → `PublicProfile.tsx` | TODO | |
+| 09 | 09-dashboard | `/dashboard` → `StudentDashboard.tsx` | DONE | Restyled with StatCards, sessions table, feedback due list |
+| 10 | 10-public-profile | `/students/:studentid` → `PublicProfile.tsx` | DONE | Restyled with avatar header, rating stats, skills chips, and reviews |
 | 11 | 11-catalogue-browse-tab | `/catalogue` Browse tab → `Catalogue.tsx` | TODO | |
 | 12 | 12-catalogue-my-skills-tab | `/catalogue` My Skills tab → `Catalogue.tsx` | TODO | |
 | 13 | 13-skill-detail | `/skills/:skillid` → `SkillDetail.tsx` | TODO | |
