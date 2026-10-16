@@ -37,7 +37,7 @@
 | 30 | 30-admin-requests | `/admin/requests` → `AdminRequests.tsx` | DONE | Restyled with status filter, oversight table, and status badges |
 | 31 | 31-admin-students | `/admin/students` → `AdminStudents.tsx` | DONE | Restyled with student roster table, profile complete badges |
 | 32 | 32-reports-admin | `/reports` (admin) → `Reports.tsx` | DONE | Restyled with identical institutional reporting capabilities |
-| 33 | 33-notification-panel-and-account-menu | Notification panel + account menu → `Layout.tsx` | TODO | |
+| 33 | 33-notification-panel-and-account-menu | Notification panel + account menu → `Layout.tsx` | DONE | Restyled with top navigation, active route styling, notification panel, and feedback dialog |
 | 34 | 34-dialog-request-new-category | Dialog: Request new category → `StudentProposals.tsx` | DONE | Restyled category request modal with validation |
 | 35 | 35-dialog-propose-new-skill | Dialog: Propose new skill → `StudentProposals.tsx` | DONE | Restyled skill proposal modal with category selector |
 | 36 | 36-dialog-add-skills | Dialog: Add skills → `ProfileSetup`/`Edit`/`Catalogue` | DONE | Restyled with search input and skill selection |
