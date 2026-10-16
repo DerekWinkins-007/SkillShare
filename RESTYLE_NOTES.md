@@ -9,10 +9,10 @@
 | 02 | 02-signup-student-sign-up | `/signup` → `StudentSignup.tsx` | DONE | Restyled with high fidelity, preserving confirmation screen and validation |
 | 03 | 03-admin-login-admin-sign-in | `/admin/login` → `AdminLogin.tsx` | DONE | Restyled with high fidelity |
 | 04 | 04-admin-signup-admin-sign-up | `/admin/signup` → `AdminSignup.tsx` | DONE | Restyled with high fidelity, keyphrase input |
-| 05 | 05-profile-setup-step-1-basics | `/profile/setup` step 1 → `ProfileSetup.tsx` | TODO | |
-| 06 | 06-profile-setup-step-2-contact | `/profile/setup` step 2 → `ProfileSetup.tsx` | TODO | |
-| 07 | 07-profile-setup-step-3-skills | `/profile/setup` step 3 → `ProfileSetup.tsx` | TODO | |
-| 08 | 08-profile-edit | `/profile/edit` → `ProfileEdit.tsx` | TODO | |
+| 05 | 05-profile-setup-step-1-basics | `/profile/setup` step 1 → `ProfileSetup.tsx` | DONE | Restyled with segmented progress indicator, high fidelity basics form |
+| 06 | 06-profile-setup-step-2-contact | `/profile/setup` step 2 → `ProfileSetup.tsx` | DONE | Restyled with contact info fields, helpers, and validation |
+| 07 | 07-profile-setup-step-3-skills | `/profile/setup` step 3 → `ProfileSetup.tsx` | DONE | Restyled with my-skills chips and searchable catalogue table |
+| 08 | 08-profile-edit | `/profile/edit` → `ProfileEdit.tsx` | DONE | Restyled with high fidelity 2-column layout and status alerts |
 | 09 | 09-dashboard | `/dashboard` → `StudentDashboard.tsx` | TODO | |
 | 10 | 10-public-profile | `/students/:studentid` → `PublicProfile.tsx` | TODO | |
 | 11 | 11-catalogue-browse-tab | `/catalogue` Browse tab → `Catalogue.tsx` | TODO | |
