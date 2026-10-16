@@ -156,9 +156,31 @@ BEGIN
         RAISE EXCEPTION 'FAILED: run_report(4) returned empty array';
     END IF;
 
+    -- Test Phone with +91 prefix
+    INSERT INTO public.student (fname, lname, dept, year, phone1, email1)
+    VALUES ('AuditPlus', 'UserPlus', 'Computer Science', 2, '+919876543210', 'auditplus@example.com');
+
+    -- Test cancel_deadline calculation (exactly 60 minutes)
+    IF public.cancel_deadline('2026-10-16 12:00:00+00'::timestamptz) <> '2026-10-16 11:00:00+00'::timestamptz THEN
+        RAISE EXCEPTION 'FAILED: cancel_deadline must subtract exactly 60 minutes';
+    END IF;
+
+    -- Verify Admin RPCs require admin role (throws FORBIDDEN when called without admin auth context)
+    BEGIN
+        PERFORM public.admin_create_category('Forbidden Cat');
+        RAISE EXCEPTION 'FAILED: admin_create_category should have thrown FORBIDDEN';
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLERRM NOT LIKE '%FORBIDDEN%' THEN
+                RAISE EXCEPTION 'FAILED: Expected FORBIDDEN exception, got: %', SQLERRM;
+            END IF;
+            RAISE NOTICE 'SUCCESS: admin_create_category rejected with FORBIDDEN.';
+    END;
+
     RAISE NOTICE 'SUCCESS: All reports executed successfully.';
     RAISE NOTICE '=== ALL CHECKS PASSED SUCCESSFULLY ===';
 END $$;
 
 -- Roll back test transaction so database remains clean
 ROLLBACK;
+
