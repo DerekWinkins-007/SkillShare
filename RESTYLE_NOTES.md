@@ -5,10 +5,10 @@
 | # | Frame Name | Route / Component | Status | Notes |
 |---|---|---|---|---|
 | 00 | 00-design-system-reference | Design system tokens / index.css | DONE | Tailwind v4 @theme, Inter, JetBrains Mono, Material Symbols |
-| 01 | 01-login-student-sign-in | `/login` → `Login.tsx` | TODO | |
-| 02 | 02-signup-student-sign-up | `/signup` → `StudentSignup.tsx` | TODO | |
-| 03 | 03-admin-login-admin-sign-in | `/admin/login` → `AdminLogin.tsx` | TODO | |
-| 04 | 04-admin-signup-admin-sign-up | `/admin/signup` → `AdminSignup.tsx` | TODO | |
+| 01 | 01-login-student-sign-in | `/login` → `Login.tsx` | DONE | Restyled with high fidelity, preserving all testids and logic |
+| 02 | 02-signup-student-sign-up | `/signup` → `StudentSignup.tsx` | DONE | Restyled with high fidelity, preserving confirmation screen and validation |
+| 03 | 03-admin-login-admin-sign-in | `/admin/login` → `AdminLogin.tsx` | DONE | Restyled with high fidelity |
+| 04 | 04-admin-signup-admin-sign-up | `/admin/signup` → `AdminSignup.tsx` | DONE | Restyled with high fidelity, keyphrase input |
 | 05 | 05-profile-setup-step-1-basics | `/profile/setup` step 1 → `ProfileSetup.tsx` | TODO | |
 | 06 | 06-profile-setup-step-2-contact | `/profile/setup` step 2 → `ProfileSetup.tsx` | TODO | |
 | 07 | 07-profile-setup-step-3-skills | `/profile/setup` step 3 → `ProfileSetup.tsx` | TODO | |

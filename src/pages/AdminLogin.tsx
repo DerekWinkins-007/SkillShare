@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { queryKeys } from '../lib/queryKeys';
 import { AppError, errorMessages } from '../lib/types';
+import { Button, TextField, ErrorBanner } from '../components/ui';
 
 export const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -39,42 +40,75 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <section>
-      <h1>Administrator Login</h1>
-      {errorMsg && <p role="alert" data-testid="adminlogin-error">{errorMsg}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="admin-email">Admin Email:</label>
-          <input
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-space-md py-space-xl">
+      {/* Brand Wordmark */}
+      <div className="mb-space-2xl text-center">
+        <Link to="/login" className="font-headline-md text-headline-md font-bold text-primary-container tracking-tight">
+          SkillShare
+        </Link>
+      </div>
+
+      {/* Admin Sign In Card */}
+      <section className="w-full max-w-[440px] bg-surface-container-lowest p-space-xl rounded-xl border border-outline-variant/60 shadow-sm">
+        <h1 className="font-display-lg text-display-lg font-bold text-on-surface mb-space-lg">
+          Admin sign in
+        </h1>
+
+        {errorMsg && (
+          <div className="mb-space-md">
+            <ErrorBanner
+              message={errorMsg}
+              data-testid="adminlogin-error"
+              onDismiss={() => setErrorMsg(null)}
+            />
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-space-md">
+          <TextField
             id="admin-email"
+            label="Email"
             type="email"
-            data-testid="adminlogin-email"
             required
+            data-testid="adminlogin-email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@vit.ac.in"
           />
-        </div>
-        <div>
-          <label htmlFor="admin-password">Password:</label>
-          <input
+
+          <TextField
             id="admin-password"
+            label="Password"
             type="password"
-            data-testid="adminlogin-password"
             required
+            data-testid="adminlogin-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        <button type="submit" data-testid="adminlogin-submit" disabled={loginMutation.isPending}>
-          {loginMutation.isPending ? 'Signing in...' : 'Sign In as Administrator'}
-        </button>
-      </form>
-      <nav>
-        <ul>
-          <li><Link to="/login">Student Login</Link></li>
-          <li><Link to="/admin/signup">Admin Sign Up</Link></li>
-        </ul>
-      </nav>
-    </section>
+
+          <Button
+            type="submit"
+            data-testid="adminlogin-submit"
+            isLoading={loginMutation.isPending}
+            className="w-full mt-space-2xs"
+          >
+            {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+          </Button>
+        </form>
+
+        {/* Bottom Navigational Links */}
+        <nav className="mt-space-lg flex flex-col items-center gap-space-xs text-center border-t border-surface-container-high pt-space-md">
+          <p className="font-body-sm text-body-sm text-secondary">
+            Need an admin account?{' '}
+            <Link to="/admin/signup" className="text-primary-container font-medium hover:underline ml-1">
+              Create admin account
+            </Link>
+          </p>
+          <Link to="/login" className="font-body-sm text-body-sm text-primary-container font-medium hover:underline text-center">
+            Student sign in
+          </Link>
+        </nav>
+      </section>
+    </div>
   );
 };

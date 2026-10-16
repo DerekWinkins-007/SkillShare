@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { queryKeys } from '../lib/queryKeys';
 import { isValidRegno, passwordRules } from '../lib/rules';
 import { AppError, errorMessages } from '../lib/types';
+import { Button, TextField, ErrorBanner } from '../components/ui';
 
 export const StudentSignup: React.FC = () => {
   const [regno, setRegno] = useState('');
@@ -67,73 +68,118 @@ export const StudentSignup: React.FC = () => {
 
   if (confirmationNotice) {
     return (
-      <section>
-        <h1>Confirmation Required</h1>
-        <p data-testid="signup-confirmation-msg">
-          Please check your email to confirm your account before logging in.
-        </p>
-        <Link to="/login">Go to Login</Link>
-      </section>
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-space-md py-space-xl">
+        <div className="mb-space-2xl text-center">
+          <Link to="/login" className="font-headline-md text-headline-md font-bold text-primary-container tracking-tight">
+            SkillShare
+          </Link>
+        </div>
+        <section className="w-full max-w-[440px] bg-surface-container-lowest p-space-xl rounded-xl border border-outline-variant/60 shadow-sm text-center">
+          <div className="w-12 h-12 rounded-full bg-status-success-bg border border-status-success-border text-status-success-text flex items-center justify-center mx-auto mb-space-md">
+            <span className="material-symbols-outlined text-[24px]">mark_email_read</span>
+          </div>
+          <h1 className="font-display-lg text-display-lg font-bold text-on-surface mb-space-sm">
+            Confirmation required
+          </h1>
+          <p data-testid="signup-confirmation-msg" className="font-body-md text-body-md text-secondary mb-space-lg">
+            Please check your email to confirm your account before logging in.
+          </p>
+          <Link to="/login">
+            <Button className="w-full">Go to sign in</Button>
+          </Link>
+        </section>
+      </div>
     );
   }
 
   return (
-    <section>
-      <h1>Student Sign Up</h1>
-      {errorMsg && <p role="alert" data-testid="signup-error">{errorMsg}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="regno">Registration Number (e.g. 25BCE1232):</label>
-          <input
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-space-md py-space-xl">
+      {/* Brand Wordmark */}
+      <div className="mb-space-2xl text-center">
+        <Link to="/login" className="font-headline-md text-headline-md font-bold text-primary-container tracking-tight">
+          SkillShare
+        </Link>
+      </div>
+
+      {/* Sign Up Card */}
+      <section className="w-full max-w-[440px] bg-surface-container-lowest p-space-xl rounded-xl border border-outline-variant/60 shadow-sm">
+        <h1 className="font-display-lg text-display-lg font-bold text-on-surface mb-space-lg">
+          Create student account
+        </h1>
+
+        {errorMsg && (
+          <div className="mb-space-md">
+            <ErrorBanner
+              message={errorMsg}
+              data-testid="signup-error"
+              onDismiss={() => setErrorMsg(null)}
+            />
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-space-md">
+          <TextField
             id="regno"
-            type="text"
-            data-testid="signup-regno"
+            label="Registration number"
+            helperText="Format: 2 digits, 3 letters, 4 digits."
             required
+            data-testid="signup-regno"
             value={regno}
             onChange={(e) => setRegno(e.target.value.toUpperCase())}
+            placeholder="e.g. 25BCE1232"
           />
-        </div>
-        <div>
-          <label htmlFor="email">Email Address:</label>
-          <input
+
+          <TextField
             id="email"
+            label="Email"
             type="email"
-            data-testid="signup-email"
             required
             maxLength={50}
+            data-testid="signup-email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="student@vitstudent.ac.in"
           />
-        </div>
-        <div>
-          <label htmlFor="password">Password (min 8 chars, letter + number):</label>
-          <input
+
+          <TextField
             id="password"
+            label="Password"
             type="password"
-            data-testid="signup-password"
+            helperText="At least 8 characters, with a letter and a number."
             required
+            data-testid="signup-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        <div>
-          <label htmlFor="confirm_password">Confirm Password:</label>
-          <input
+
+          <TextField
             id="confirm_password"
+            label="Re-enter password"
             type="password"
-            data-testid="signup-confirm-password"
             required
+            data-testid="signup-confirm-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
-        </div>
-        <button type="submit" data-testid="signup-submit" disabled={signupMutation.isPending}>
-          {signupMutation.isPending ? 'Signing up...' : 'Sign Up'}
-        </button>
-      </form>
-      <nav>
-        <p>Already have an account? <Link to="/login">Sign In</Link></p>
-      </nav>
-    </section>
+
+          <Button
+            type="submit"
+            data-testid="signup-submit"
+            isLoading={signupMutation.isPending}
+            className="w-full mt-space-2xs"
+          >
+            {signupMutation.isPending ? 'Signing up...' : 'Create account'}
+          </Button>
+        </form>
+
+        {/* Already have an account */}
+        <nav className="mt-space-lg text-center font-body-sm text-body-sm text-secondary border-t border-surface-container-high pt-space-md">
+          Already have an account?{' '}
+          <Link to="/login" className="text-primary-container font-label-sm hover:underline ml-1">
+            Sign in
+          </Link>
+        </nav>
+      </section>
+    </div>
   );
 };
