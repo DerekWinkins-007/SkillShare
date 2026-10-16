@@ -15,9 +15,9 @@
 | 08 | 08-profile-edit | `/profile/edit` → `ProfileEdit.tsx` | DONE | Restyled with high fidelity 2-column layout and status alerts |
 | 09 | 09-dashboard | `/dashboard` → `StudentDashboard.tsx` | DONE | Restyled with StatCards, sessions table, feedback due list |
 | 10 | 10-public-profile | `/students/:studentid` → `PublicProfile.tsx` | DONE | Restyled with avatar header, rating stats, skills chips, and reviews |
-| 11 | 11-catalogue-browse-tab | `/catalogue` Browse tab → `Catalogue.tsx` | TODO | |
-| 12 | 12-catalogue-my-skills-tab | `/catalogue` My Skills tab → `Catalogue.tsx` | TODO | |
-| 13 | 13-skill-detail | `/skills/:skillid` → `SkillDetail.tsx` | TODO | |
+| 11 | 11-catalogue-browse-tab | `/catalogue` Browse tab → `Catalogue.tsx` | DONE | Restyled with categories sidebar, search, and available skills table |
+| 12 | 12-catalogue-my-skills-tab | `/catalogue` My Skills tab → `Catalogue.tsx` | DONE | Restyled with teaching skills list, add action, and empty state |
+| 13 | 13-skill-detail | `/skills/:skillid` → `SkillDetail.tsx` | DONE | Restyled with category pill, providers table, ratings, and request actions |
 | 14 | 14-requests-received-tab | `/requests` Received tab → `RequestsList.tsx` | TODO | |
 | 15 | 15-requests-sent-tab | `/requests` Sent tab → `RequestsList.tsx` | TODO | |
 | 16 | 16-request-pending-provider | `/requests/:requestid` (pending, provider) → `RequestDetail.tsx` | TODO | |
@@ -41,7 +41,7 @@
 | 34 | 34-dialog-request-new-category | Dialog: Request new category → `StudentProposals.tsx` | TODO | |
 | 35 | 35-dialog-propose-new-skill | Dialog: Propose new skill → `StudentProposals.tsx` | TODO | |
 | 36 | 36-dialog-add-skills | Dialog: Add skills → `ProfileSetup`/`Edit`/`Catalogue` | TODO | |
-| 37 | 37-dialog-send-skill-request | Dialog: Send skill request → `SkillDetail.tsx` | TODO | |
+| 37 | 37-dialog-send-skill-request | Dialog: Send skill request → `SkillDetail.tsx` | DONE | Restyled request session triggers with mutation feedback |
 | 38 | 38-dialog-propose-slot-offline | Dialog: Propose slot (offline) → `RequestDetail.tsx` | TODO | |
 | 39 | 39-dialog-propose-slot-online | Dialog: Propose slot (online) → `RequestDetail.tsx` | TODO | |
 | 40 | 40-dialog-cancel-request | Dialog: Cancel request → `RequestDetail.tsx` | TODO | |
