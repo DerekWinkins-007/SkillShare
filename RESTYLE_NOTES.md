@@ -26,9 +26,9 @@
 | 19 | 19-request-confirmed | `/requests/:requestid` (confirmed) → `RequestDetail.tsx` | DONE | Restyled with meeting details and counterpart contact card |
 | 20 | 20-request-completed-no-feedback | `/requests/:requestid` (completed) → `RequestDetail.tsx` | DONE | Restyled with feedback submission form and rating |
 | 21 | 21-request-cancelled | `/requests/:requestid` (cancelled) → `RequestDetail.tsx` | DONE | Restyled with cancellation reason banner |
-| 22 | 22-proposals-category-requests-tab | `/proposals` Category Requests → `StudentProposals.tsx` | TODO | |
-| 23 | 23-proposals-skill-proposals-tab | `/proposals` Skill Proposals → `StudentProposals.tsx` | TODO | |
-| 24 | 24-reports-student | `/reports` (student) → `Reports.tsx` | TODO | |
+| 22 | 22-proposals-category-requests-tab | `/proposals` Category Requests → `StudentProposals.tsx` | DONE | Restyled with category requests table and dialog trigger |
+| 23 | 23-proposals-skill-proposals-tab | `/proposals` Skill Proposals → `StudentProposals.tsx` | DONE | Restyled with skill proposals table and dialog trigger |
+| 24 | 24-reports-student | `/reports` (student) → `Reports.tsx` | DONE | Restyled with report selector, SQL preview, and results table |
 | 25 | 25-admin-overview | `/admin` → `AdminDashboard.tsx` | TODO | |
 | 26 | 26-admin-categories-tab | `/admin/categories` Categories → `AdminCategories.tsx` | TODO | |
 | 27 | 27-admin-category-requests-tab | `/admin/categories` Category Requests → `AdminCategories.tsx` | TODO | |
@@ -36,11 +36,11 @@
 | 29 | 29-admin-skill-proposals-tab | `/admin/skills` Skill Proposals → `AdminSkills.tsx` | TODO | |
 | 30 | 30-admin-requests | `/admin/requests` → `AdminRequests.tsx` | TODO | |
 | 31 | 31-admin-students | `/admin/students` → `AdminStudents.tsx` | TODO | |
-| 32 | 32-reports-admin | `/reports` (admin) → `Reports.tsx` | TODO | |
+| 32 | 32-reports-admin | `/reports` (admin) → `Reports.tsx` | DONE | Restyled with identical institutional reporting capabilities |
 | 33 | 33-notification-panel-and-account-menu | Notification panel + account menu → `Layout.tsx` | TODO | |
-| 34 | 34-dialog-request-new-category | Dialog: Request new category → `StudentProposals.tsx` | TODO | |
-| 35 | 35-dialog-propose-new-skill | Dialog: Propose new skill → `StudentProposals.tsx` | TODO | |
-| 36 | 36-dialog-add-skills | Dialog: Add skills → `ProfileSetup`/`Edit`/`Catalogue` | TODO | |
+| 34 | 34-dialog-request-new-category | Dialog: Request new category → `StudentProposals.tsx` | DONE | Restyled category request modal with validation |
+| 35 | 35-dialog-propose-new-skill | Dialog: Propose new skill → `StudentProposals.tsx` | DONE | Restyled skill proposal modal with category selector |
+| 36 | 36-dialog-add-skills | Dialog: Add skills → `ProfileSetup`/`Edit`/`Catalogue` | DONE | Restyled with search input and skill selection |
 | 37 | 37-dialog-send-skill-request | Dialog: Send skill request → `SkillDetail.tsx` | DONE | Restyled request session triggers with mutation feedback |
 | 38 | 38-dialog-propose-slot-offline | Dialog: Propose slot (offline) → `RequestDetail.tsx` | DONE | Restyled offline slot proposal with location input |
 | 39 | 39-dialog-propose-slot-online | Dialog: Propose slot (online) → `RequestDetail.tsx` | DONE | Restyled online slot proposal with video link input |
