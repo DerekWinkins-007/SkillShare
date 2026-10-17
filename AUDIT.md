@@ -38,3 +38,11 @@
 |---|---|---|---|---|---|
 | D1 | No remote font, icon, or script CDNs (`googleapis`, `gstatic`, `cdnjs`, `unpkg`, `cdn.jsdelivr.net`) | PASS | - | Scanned `src/`, `index.html`, `public/`. Fonts (`@fontsource/inter`, `@fontsource/jetbrains-mono`) and icons (`material-symbols`) are bundled locally via npm packages imported in `src/index.css`. No external CDN references exist in HTML, JS, or CSS. | None |
 | D2 | No unauthorized external HTTP/HTTPS URLs in client code | PASS | - | Grep for `https?://` across `src/`: only google meet placeholder text (`https://meet.google.com/...`) in `RequestDetail.tsx:632` and test mock strings in unit tests. Supabase client URL is retrieved strictly from `import.meta.env.VITE_SUPABASE_URL`. | None |
+
+## Phase 1E: Filler Data and Design Tokens
+
+| ID | Check | PASS/FAIL/UNCLEAR | Severity | Evidence | Proposed Fix |
+|---|---|---|---|---|---|
+| E1 | No filler text / lorem ipsum | PASS | - | Grep for `lorem`, `ipsum` across `src/pages` and `src/components` returned 0 matches. | None |
+| E2 | No hardcoded example user/company names in UI | PASS | - | Grep for typical placeholder names returned only standard form placeholder in `AdminSignup.tsx:109` (`placeholder="e.g. Dr. John Doe"`). | None |
+| E3 | Design token adherence / No ad-hoc hex colors | PASS | - | Grep for hex color patterns `#[0-9a-fA-F]{3,8}` across `src/pages` and `src/components` returned 0 matches. All colors adhere to design tokens defined via `@theme` in `src/index.css`. Only 1 subtle backdrop shadow box-shadow in `Layout.tsx:226`. | None |
