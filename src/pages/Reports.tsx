@@ -2,155 +2,128 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { queryKeys } from '../lib/queryKeys';
-import { REPORT_DEFINITIONS } from '../lib/reports';
-import { Button, TextField, SelectField, Skeleton, ErrorBanner } from '../components/ui';
+import { REPORT_DEFINITIONS, ReportDefinition } from '../lib/reports';
+import { Button, TextField, Skeleton, ErrorBanner } from '../components/ui';
 
-export const Reports: React.FC = () => {
-  const [selectedReport, setSelectedReport] = useState<number>(1);
-  const [deptInput, setDeptInput] = useState<string>('');
+// ─────────────────────────────────────────────────────────────
+// Individual report card (owns its own dept input + query)
+// ─────────────────────────────────────────────────────────────
+const ReportCard: React.FC<{ def: ReportDefinition }> = ({ def }) => {
+  const [deptInput, setDeptInput] = useState('');
   const [activeParams, setActiveParams] = useState<{ n: number; dept?: string | null }>({
-    n: 1,
+    n: def.n,
     dept: null,
   });
 
-  const {
-    data: rows = [],
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: rows = [], isLoading, error } = useQuery({
     queryKey: queryKeys.reports.report(activeParams.n, activeParams.dept),
     queryFn: () => api.runReport(activeParams.n, activeParams.dept),
   });
 
-  const def = REPORT_DEFINITIONS[selectedReport];
+  const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 
-  const handleRun = (e: React.FormEvent) => {
+  const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
     setActiveParams({
-      n: selectedReport,
+      n: def.n,
       dept: def.hasDeptFilter && deptInput.trim() ? deptInput.trim() : null,
     });
   };
 
-  const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
-
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl flex flex-col gap-space-lg">
-      {/* Header */}
-      <div>
-        <h1 className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
-          Database System Reports
-        </h1>
-        <p className="font-body-md text-body-md text-secondary mt-1">
-          Execute institutional analytics queries and inspect real-time database views
-        </p>
+    <section
+      data-testid={`report-card-${def.n}`}
+      className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl overflow-hidden shadow-sm"
+    >
+      {/* Card header */}
+      <div className="px-space-lg py-space-md flex items-center justify-between gap-space-sm">
+        <div className="flex items-center gap-space-sm">
+          <span className="w-2.5 h-2.5 rounded-full bg-primary-container shrink-0" />
+          <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
+            {def.title}
+          </h2>
+        </div>
+        <span className="font-mono text-label-xs font-semibold text-secondary tracking-wider uppercase shrink-0">
+          {def.badge}
+        </span>
       </div>
 
-      {/* Query Parameters Form Card */}
-      <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-lg shadow-sm">
-        <form onSubmit={handleRun} className="flex flex-col sm:flex-row sm:items-end gap-space-md">
-          <div className="flex-1">
-            <SelectField
-              id="report-select"
-              label="Select Report"
-              data-testid="report-select"
-              value={selectedReport}
-              onChange={(e) => setSelectedReport(Number(e.target.value))}
+      {/* SQL preview */}
+      <div className="mx-space-lg mb-space-md bg-surface-container rounded-lg px-space-md py-space-sm overflow-x-auto">
+        <pre
+          data-testid={`report-sql-${def.n}`}
+          className="font-mono text-code-sm text-secondary whitespace-pre-wrap"
+        >
+          {def.sql}
+        </pre>
+      </div>
+
+      {/* Dept filter (only for report 1) */}
+      {def.hasDeptFilter && (
+        <form
+          onSubmit={handleApply}
+          className="mx-space-lg mb-space-md flex items-end gap-space-sm"
+        >
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={`report-dept-${def.n}`}
+              className="font-label-sm text-label-sm text-secondary font-medium"
             >
-              <option value={1}>1. Students by Department</option>
-              <option value={2}>2. Skills and Categories</option>
-              <option value={3}>3. Overall Feedback Statistics</option>
-              <option value={4}>4. Requests by Status</option>
-              <option value={5}>5. Feedback Received Leaderboard</option>
-            </SelectField>
+              Department
+            </label>
+            <TextField
+              id={`report-dept-${def.n}`}
+              data-testid={`report-dept-input-${def.n}`}
+              value={deptInput}
+              onChange={(e) => setDeptInput(e.target.value)}
+              placeholder="e.g. CSE"
+              className="w-52"
+            />
           </div>
-
-          {def.hasDeptFilter && (
-            <div className="w-full sm:w-64">
-              <TextField
-                id="report-dept"
-                label="Department Filter"
-                helperText="e.g. CSE (leave empty for all)"
-                data-testid="report-dept-input"
-                value={deptInput}
-                onChange={(e) => setDeptInput(e.target.value)}
-                placeholder="All departments"
-              />
-            </div>
-          )}
-
-          <div className="pb-0.5">
-            <Button
-              type="submit"
-              data-testid="report-run-btn"
-              isLoading={isLoading}
-              className="w-full sm:w-auto h-10"
-            >
-              <span className="material-symbols-outlined text-[18px]">play_arrow</span>
-              <span>Execute Report</span>
-            </Button>
-          </div>
-        </form>
-      </section>
-
-      {/* SQL Query Preview Card */}
-      <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl overflow-hidden shadow-sm flex flex-col">
-        <div className="p-space-md bg-surface-container-low border-b border-surface-container-high flex items-center justify-between">
-          <div className="flex items-center gap-space-xs text-secondary">
-            <span className="material-symbols-outlined text-[18px]">terminal</span>
-            <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
-              Report Query
-            </h2>
-          </div>
-          <span className="font-code-sm text-code-sm text-secondary uppercase tracking-wider">
-            SQL
-          </span>
-        </div>
-        <div className="p-space-md bg-neutral-900 text-neutral-100 overflow-x-auto">
-          <pre
-            data-testid="report-sql-text"
-            className="font-mono text-code-sm text-code-sm text-neutral-100 selection:bg-primary-container"
+          <Button
+            type="submit"
+            size="sm"
+            data-testid={`report-apply-${def.n}`}
+            isLoading={isLoading}
           >
-            {def.sql}
-          </pre>
-        </div>
-      </section>
+            <span className="material-symbols-outlined text-[16px]">filter_alt</span>
+            Apply
+          </Button>
+        </form>
+      )}
 
-      {/* Results Section */}
-      <section className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl overflow-hidden shadow-sm flex flex-col">
-        <div className="p-space-md border-b border-surface-container-high flex items-center justify-between">
-          <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
-            Results ({rows.length} rows)
-          </h2>
-          <span className="px-2 py-0.5 rounded-full bg-surface-container text-secondary text-label-xs font-semibold tabular-nums">
-            {rows.length} records
-          </span>
-        </div>
-
+      {/* Results table */}
+      <div className="border-t border-outline-variant/40">
         {isLoading ? (
           <div className="p-space-lg flex flex-col gap-space-sm">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
           </div>
         ) : error ? (
           <div className="p-space-lg">
             <ErrorBanner message="Report query failed." />
           </div>
         ) : rows.length === 0 ? (
-          <div className="py-space-2xl text-center">
-            <p data-testid="report-empty" className="font-body-sm text-body-sm text-secondary">
+          <div className="py-space-xl text-center">
+            <p
+              data-testid={`report-empty-${def.n}`}
+              className="font-body-sm text-body-sm text-secondary"
+            >
               No records returned.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table data-testid="report-table" className="w-full text-left border-collapse">
+            <table
+              data-testid={`report-table-${def.n}`}
+              className="w-full text-left border-collapse"
+            >
               <thead className="bg-surface-container-low text-secondary font-label-xs uppercase tracking-wider select-none">
                 <tr>
                   {columns.map((col) => (
                     <th key={col} className="py-3 px-space-md font-semibold" scope="col">
-                      {col.replace(/_/g, ' ')}
+                      {col.replace(/_/g, '_')}
                     </th>
                   ))}
                 </tr>
@@ -169,7 +142,35 @@ export const Reports: React.FC = () => {
             </table>
           </div>
         )}
-      </section>
+      </div>
+    </section>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// Reports page – stacked cards (frames 24 and 32)
+// ─────────────────────────────────────────────────────────────
+export const Reports: React.FC = () => {
+  const defs = Object.values(REPORT_DEFINITIONS);
+
+  return (
+    <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl flex flex-col gap-space-xl">
+      {/* Header */}
+      <div>
+        <h1 className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
+          Reports
+        </h1>
+        <p className="font-body-md text-body-md text-secondary mt-1">
+          Execute institutional analytics queries and inspect real-time database views
+        </p>
+      </div>
+
+      {/* Stacked report cards */}
+      <div className="flex flex-col gap-space-xl">
+        {defs.map((def) => (
+          <ReportCard key={def.n} def={def} />
+        ))}
+      </div>
     </div>
   );
 };
