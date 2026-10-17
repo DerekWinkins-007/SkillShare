@@ -1,7 +1,5 @@
 node_modules
 .env
-
 dist
-.env
 .env.local
-node_modules
+scratch/
