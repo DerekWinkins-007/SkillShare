@@ -26,8 +26,8 @@ serve(async (req: Request) => {
   try {
     const { display_name, email, password, keyphrase } = await req.json();
 
-    const expectedKeyphrase = Deno.env.get('ADMIN_KEYPHRASE') ?? 'skillshare-admin-secret-2026';
-    if (!keyphrase || !safeCompare(keyphrase.trim(), expectedKeyphrase.trim())) {
+    const expectedKeyphrase = Deno.env.get('ADMIN_KEYPHRASE');
+    if (!expectedKeyphrase || !keyphrase || !safeCompare(keyphrase.trim(), expectedKeyphrase.trim())) {
       return new Response(
         JSON.stringify({ code: 'INVALID_KEYPHRASE', message: 'INVALID_KEYPHRASE' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
