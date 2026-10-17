@@ -20,8 +20,9 @@ export const Layout: React.FC = () => {
   useSyncScheduler();
   const { promptItem, dismissPrompt } = useFeedbackPrompt();
 
-  // Notification state
+  // Notification & Account state
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState<number>(5);
   const [feedbackComments, setFeedbackComments] = useState<string>('');
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
@@ -141,11 +142,6 @@ export const Layout: React.FC = () => {
                         Reports
                       </Link>
                     </li>
-                    <li>
-                      <Link to="/profile/edit" data-testid="nav-profile-edit" className={linkClass('/profile/edit')}>
-                        Profile
-                      </Link>
-                    </li>
                   </>
                 )}
 
@@ -153,7 +149,7 @@ export const Layout: React.FC = () => {
                   <>
                     <li>
                       <Link to="/admin" data-testid="nav-admin-dashboard" className={linkClass('/admin')}>
-                        Admin Dashboard
+                        Overview
                       </Link>
                     </li>
                     <li>
@@ -193,7 +189,10 @@ export const Layout: React.FC = () => {
               <button
                 type="button"
                 data-testid="nav-notifications-btn"
-                onClick={() => setShowNotifications((v) => !v)}
+                onClick={() => {
+                  setShowNotifications((v) => !v);
+                  setShowAccountMenu(false);
+                }}
                 className="relative flex items-center gap-1.5 px-space-xs sm:px-space-sm py-1.5 font-label-md text-label-md text-secondary hover:bg-surface-container-low hover:text-on-surface rounded-xl transition-colors cursor-pointer"
                 title="Notifications"
               >
@@ -206,18 +205,61 @@ export const Layout: React.FC = () => {
             )}
 
             {me && (
-              <button
-                type="button"
-                data-testid="nav-signout-btn"
-                onClick={handleSignOut}
-                className="flex items-center gap-1.5 px-space-xs sm:px-space-sm py-1.5 font-label-md text-label-md text-secondary hover:bg-surface-container-low hover:text-on-surface rounded-xl transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">logout</span>
-                <span className="hidden md:inline">
-                  Sign Out ({me.role === 'admin' ? me.display_name : me.student?.regno || me.login_email})
-                </span>
-                <span className="md:hidden">Sign Out</span>
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  data-testid="nav-account-btn"
+                  onClick={() => {
+                    setShowAccountMenu((v) => !v);
+                    setShowNotifications(false);
+                  }}
+                  className="flex items-center gap-space-2xs px-space-sm py-1.5 font-label-md text-label-md text-secondary hover:bg-surface-container-low hover:text-on-surface rounded-xl transition-colors cursor-pointer"
+                >
+                  <span>Account</span>
+                  <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                </button>
+
+                {showAccountMenu && (
+                  <nav
+                    aria-label="Account Options"
+                    className="absolute right-0 top-full mt-2 w-[220px] bg-surface-container-lowest rounded-2xl p-space-xs shadow-xl border border-outline-variant/60 flex flex-col z-50 animate-in fade-in zoom-in-95 duration-100"
+                    style={{ borderRadius: 16, boxShadow: '0 12px 32px rgba(15,23,42,0.18)' }}
+                  >
+                    {me.role === 'student' && (
+                      <>
+                        <Link
+                          to={`/students/${me.student?.studentid || ''}`}
+                          onClick={() => setShowAccountMenu(false)}
+                          data-testid="nav-my-profile"
+                          className="h-10 px-space-sm flex items-center text-on-surface font-body-sm text-body-sm rounded-lg hover:bg-surface-container-low transition-colors"
+                        >
+                          My profile
+                        </Link>
+                        <Link
+                          to="/profile/edit"
+                          onClick={() => setShowAccountMenu(false)}
+                          data-testid="nav-profile-edit"
+                          className="h-10 px-space-sm flex items-center text-on-surface font-body-sm text-body-sm rounded-lg hover:bg-surface-container-low transition-colors"
+                        >
+                          Edit profile
+                        </Link>
+                        <div className="h-[1px] w-full bg-surface-container my-space-2xs" />
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      data-testid="nav-signout-btn"
+                      onClick={() => {
+                        setShowAccountMenu(false);
+                        handleSignOut();
+                      }}
+                      className="h-10 px-space-sm w-full text-left flex items-center text-on-surface font-body-sm text-body-sm rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
+                    >
+                      Sign out
+                    </button>
+                  </nav>
+                )}
+              </div>
             )}
           </div>
         </div>
