@@ -98,7 +98,7 @@ function runContractCheck() {
 
   // Check direct table reads
   console.log('\n=== Direct Table / View Access Check ===');
-  const tableAccessRegex = /client\.from\(\s*'([^']+)'\s*\)/g;
+  const tableAccessRegex = /client\s*\.\s*from\(\s*['"]([^'"]+)['"]\s*\)/g;
   const tablesAccessed = new Set<string>();
   let tMatch: RegExpExecArray | null;
   while ((tMatch = tableAccessRegex.exec(adapterContent)) !== null) {
