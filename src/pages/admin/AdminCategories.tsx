@@ -22,6 +22,9 @@ export const AdminCategories: React.FC = () => {
   const [newCatName, setNewCatName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Delete confirmation state (Frame 45)
+  const [deleteTargetCat, setDeleteTargetCat] = useState<{ id: number; name: string } | null>(null);
+
   const [reqStatusFilter, setReqStatusFilter] = useState<string>('pending');
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
   const [queueError, setQueueError] = useState<string | null>(null);
@@ -59,6 +62,7 @@ export const AdminCategories: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.categories });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
+      setDeleteTargetCat(null);
       setFormError(null);
     },
     onError: (err: unknown) => {
@@ -221,7 +225,7 @@ export const AdminCategories: React.FC = () => {
                           size="sm"
                           data-testid={`admin-cat-delete-${c.categoryid}`}
                           disabled={deleteCatMutation.isPending}
-                          onClick={() => deleteCatMutation.mutate(c.categoryid)}
+                          onClick={() => setDeleteTargetCat({ id: c.categoryid, name: c.categoryname })}
                           className="hover:text-error hover:border-status-danger-border"
                         >
                           Delete
@@ -416,6 +420,34 @@ export const AdminCategories: React.FC = () => {
             </Button>
           </div>
         </form>
+      </Dialog>
+
+      {/* DIALOG: DELETE CATEGORY CONFIRMATION (Frame 45) */}
+      <Dialog
+        isOpen={deleteTargetCat !== null}
+        onClose={() => setDeleteTargetCat(null)}
+        title="Delete this category?"
+        description={`"${deleteTargetCat?.name ?? ''}" will be permanently removed. Any skills in this category will also be affected.`}
+      >
+        <div className="flex items-center justify-end gap-space-sm pt-space-xs">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setDeleteTargetCat(null)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            data-testid="admin-cat-delete-confirm"
+            disabled={deleteCatMutation.isPending}
+            isLoading={deleteCatMutation.isPending}
+            onClick={() => deleteTargetCat && deleteCatMutation.mutate(deleteTargetCat.id)}
+          >
+            Delete
+          </Button>
+        </div>
       </Dialog>
     </div>
   );

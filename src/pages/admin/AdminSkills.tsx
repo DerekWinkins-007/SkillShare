@@ -24,6 +24,9 @@ export const AdminSkills: React.FC = () => {
   const [newSkillCatId, setNewSkillCatId] = useState<number | ''>('');
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Delete confirmation state (Frame 47)
+  const [deleteTargetSkill, setDeleteTargetSkill] = useState<{ id: number; name: string } | null>(null);
+
   const [propStatusFilter, setPropStatusFilter] = useState<string>('pending');
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
   const [queueError, setQueueError] = useState<string | null>(null);
@@ -67,6 +70,7 @@ export const AdminSkills: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['catalogue', 'skills'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
+      setDeleteTargetSkill(null);
       setFormError(null);
     },
     onError: (err: unknown) => {
@@ -241,7 +245,7 @@ export const AdminSkills: React.FC = () => {
                           size="sm"
                           data-testid={`admin-skill-delete-${s.skillid}`}
                           disabled={deleteSkillMutation.isPending}
-                          onClick={() => deleteSkillMutation.mutate(s.skillid)}
+                          onClick={() => setDeleteTargetSkill({ id: s.skillid, name: s.skillname })}
                           className="hover:text-error hover:border-status-danger-border"
                         >
                           Delete
@@ -456,6 +460,34 @@ export const AdminSkills: React.FC = () => {
             </Button>
           </div>
         </form>
+      </Dialog>
+
+      {/* DIALOG: DELETE SKILL CONFIRMATION (Frame 47) */}
+      <Dialog
+        isOpen={deleteTargetSkill !== null}
+        onClose={() => setDeleteTargetSkill(null)}
+        title="Delete this skill?"
+        description={`"${deleteTargetSkill?.name ?? ''}" will be permanently removed from the catalogue.`}
+      >
+        <div className="flex items-center justify-end gap-space-sm pt-space-xs">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setDeleteTargetSkill(null)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            data-testid="admin-skill-delete-confirm"
+            disabled={deleteSkillMutation.isPending}
+            isLoading={deleteSkillMutation.isPending}
+            onClick={() => deleteTargetSkill && deleteSkillMutation.mutate(deleteTargetSkill.id)}
+          >
+            Delete
+          </Button>
+        </div>
       </Dialog>
     </div>
   );
