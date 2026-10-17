@@ -24,7 +24,11 @@ supabase/
 │   ├── 0006a_request_workflow.sql           # request view helper, create and respond RPCs
 │   ├── 0006b_request_workflow.sql           # slot response and cancellation RPCs
 │   ├── 0006c_request_workflow.sql           # request lists, contact details, sync RPCs
-│   └── 0007_feedback_dashboard_reports.sql # feedback, dashboard, reports 1-5, grants
+│   ├── 0007_feedback_dashboard_reports.sql # feedback, dashboard, reports 1-5, grants
+│   ├── 0008_login_email_fix.sql             # strict auth.users login email resolution
+│   ├── 0009_security_and_rule_parity.sql   # RLS on all tables, phone +91 regex, indexes
+│   ├── 0010_fix_cancel_window_accepted.sql  # cancel cutoff enforcement on accepted status
+│   └── 0011_claim_outbox_emails.sql        # atomic FOR UPDATE SKIP LOCKED outbox claiming
 └── tests/
     ├── contract_check.ts                    # Automated contract verification script
     ├── contract_check.cmd                   # Windows runner for contract check
@@ -38,8 +42,19 @@ supabase/
 ### In Supabase Dashboard (SQL Editor)
 If using Supabase Cloud:
 1. Open the **SQL Editor** in your Supabase dashboard.
-2. Execute each file in `supabase/migrations/` sequentially from `0001` to `0007`.
+2. Execute each file in `supabase/migrations/` sequentially from `0001` through `0011`.
 3. All tables, functions, triggers, and grants will be created with zero errors.
+
+### Edge Functions Deployment
+1. Set secrets:
+   ```bash
+   npx supabase secrets set RESEND_API_KEY="..." MAIL_FROM="..." ADMIN_KEYPHRASE="..."
+   ```
+2. Deploy functions:
+   ```bash
+   npx supabase functions deploy admin-signup --no-verify-jwt
+   npx supabase functions deploy process-email-outbox
+   ```
 
 ### Via Supabase CLI (Local Development)
 ```bash

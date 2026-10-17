@@ -41,6 +41,12 @@ This document records the exact contract alignments and design decisions between
    - `resolve_login_identifier(p_regno)` strictly returns `auth.users.email` by joining `signup` -> `app_user` -> `auth.users`, never falling back to `student.email1`.
    - `get_me()` returns `login_email` directly from `auth.users.email`.
 
+4. **Email Outbox & Resend Dispatch (`process-email-outbox`)**:
+   - Outbox processing consumes rows from `public.email_outbox` via atomic `claim_outbox_emails` RPC using `FOR UPDATE SKIP LOCKED`.
+   - Email templates are canonicalized in `shared/emailTemplates.ts` and mirrored to `supabase/functions/_shared/emailTemplates.ts`.
+   - The recipient address is strictly resolved from `to_studentid` -> `app_user.auth_id` -> `auth.admin.getUserById(auth_id)` -> `user.email`. Never uses `student.email1` or `email2` for sending.
+   - Emails are dispatched via Resend REST API (`https://api.resend.com/emails`) with Bearer token authentication from `RESEND_API_KEY` and sender address from `MAIL_FROM`.
+
 ---
 
 ## 3. Error Code Mappings

@@ -1,127 +1,14 @@
 // supabase/functions/process-email-outbox/index.ts
-// Deno TypeScript Edge Function for processing queued emails in email_outbox
+// Deno TypeScript Edge Function for processing queued emails in email_outbox via Resend API
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0';
+import { renderEmail } from '../_shared/emailTemplates.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-function formatIST(dateStr: string | Date): string {
-  const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-  const formatter = new Intl.DateTimeFormat('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true,
-  });
-  return `${formatter.format(d)} IST`;
-}
-
-function escapeHtml(str: string | number | null | undefined): string {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-interface OutboxPayload {
-  kind: string;
-  skillname?: string;
-  categoryname?: string;
-  meeting_time?: string;
-  cancel_deadline?: string;
-  mode?: string;
-  location?: string | null;
-  meeting_link?: string | null;
-  requester_name?: string;
-  provider_name?: string;
-  cancelled_by_fname?: string;
-  reason?: string;
-  counterpart?: {
-    fname: string;
-    lname: string;
-    dept: string;
-    year: number;
-    phone1: string;
-    phone2?: string | null;
-    email1: string;
-    email2?: string | null;
-  };
-}
-
-function renderEmail(payload: OutboxPayload): { subject: string; html: string; text: string } {
-  switch (payload.kind) {
-    case 'request_confirmed': {
-      const formattedTime = formatIST(payload.meeting_time);
-      const modeLabel = payload.mode.charAt(0).toUpperCase() + payload.mode.slice(1);
-      const subject = `SkillShare: ${payload.skillname} session confirmed for ${formattedTime} (${modeLabel})`;
-      const deadlineIST = formatIST(payload.cancel_deadline);
-      const cp = payload.counterpart;
-
-      const html = `
-<div>
-  <h2>Session Confirmed: ${escapeHtml(payload.skillname)} (${escapeHtml(payload.categoryname)})</h2>
-  <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
-  <p><strong>Mode:</strong> ${escapeHtml(modeLabel)}</p>
-  <p><strong>${payload.mode === 'offline' ? 'Location' : 'Meeting Link'}:</strong> ${escapeHtml(payload.mode === 'offline' ? payload.location : (payload.meeting_link ?? 'None'))}</p>
-  <p>You can cancel until ${escapeHtml(deadlineIST)}.</p>
-  <h3>Counterpart Information</h3>
-  <p><strong>Name:</strong> ${escapeHtml(cp.fname)} ${escapeHtml(cp.lname)} (${escapeHtml(cp.dept)}, Year ${escapeHtml(cp.year)})</p>
-  <p><strong>Phone:</strong> ${escapeHtml(cp.phone1)} ${cp.phone2 ? `| ${escapeHtml(cp.phone2)}` : ''}</p>
-  <p><strong>Email:</strong> ${escapeHtml(cp.email1)} ${cp.email2 ? `| ${escapeHtml(cp.email2)}` : ''}</p>
-</div>`;
-
-      const text = `Session Confirmed: ${payload.skillname}\nTime: ${formattedTime}\nCounterpart: ${cp.fname} ${cp.lname}\nPhone: ${cp.phone1}\nEmail: ${cp.email1}`;
-      return { subject, html, text };
-    }
-
-    case 'request_received': {
-      const subject = `SkillShare: New session request for ${payload.skillname}`;
-      const text = `${payload.requester_name} has requested a learning session for ${payload.skillname}. Please log in to accept or decline.`;
-      const html = `<p>${escapeHtml(text)}</p>`;
-      return { subject, html, text };
-    }
-
-    case 'request_accepted': {
-      const subject = `SkillShare: Your request for ${payload.skillname} has been accepted`;
-      const timeStr = formatIST(payload.meeting_time);
-      const text = `${payload.provider_name} has accepted your request and proposed a slot at ${timeStr}. Please log in to confirm or decline.`;
-      const html = `<p>${escapeHtml(text)}</p>`;
-      return { subject, html, text };
-    }
-
-    case 'request_rejected': {
-      const subject = `SkillShare: Request for ${payload.skillname} was declined`;
-      const text = `Your session request for ${payload.skillname} could not be scheduled.`;
-      const html = `<p>${escapeHtml(text)}</p>`;
-      return { subject, html, text };
-    }
-
-    case 'request_cancelled': {
-      const subject = `SkillShare: Session for ${payload.skillname} has been cancelled`;
-      const text = `${payload.cancelled_by_fname} cancelled the session for ${payload.skillname}. Reason: ${payload.reason}`;
-      const html = `<p>${escapeHtml(text)}</p>`;
-      return { subject, html, text };
-    }
-
-    default:
-      return {
-        subject: 'SkillShare Notification',
-        html: `<p>New notification</p>`,
-        text: 'New notification',
-      };
-  }
-}
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -129,34 +16,45 @@ serve(async (req: Request) => {
   }
 
   try {
-    let requestid: number | undefined;
+    let requestid: number | null = null;
     if (req.method === 'POST') {
       try {
         const body = await req.json();
-        requestid = body?.requestid;
+        if (typeof body?.requestid === 'number') {
+          requestid = body.requestid;
+        }
       } catch {
         // empty body ok
       }
+    }
+
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    const mailFrom = Deno.env.get('MAIL_FROM');
+
+    if (!resendApiKey || !mailFrom) {
+      return new Response(
+        JSON.stringify({
+          error: 'Configuration missing: RESEND_API_KEY and MAIL_FROM environment variables must be configured on the server.',
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    let query = supabaseAdmin
-      .from('email_outbox')
-      .select('*, app_user:to_studentid!inner(auth_id)')
-      .eq('status', 'queued')
-      .order('created_at', { ascending: true })
-      .limit(50);
+    // Atomically claim rows via RPC claim_outbox_emails (FOR UPDATE SKIP LOCKED)
+    const { data: claimed, error: claimError } = await supabaseAdmin.rpc('claim_outbox_emails', {
+      p_batch_size: 50,
+      p_requestid: requestid,
+    });
 
-    if (requestid !== undefined) {
-      query = query.eq('requestid', requestid);
-    }
-
-    const { data: queued, error: fetchError } = await query;
-    if (fetchError) {
-      return new Response(JSON.stringify({ error: fetchError.message }), {
+    if (claimError) {
+      return new Response(JSON.stringify({ error: claimError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -165,61 +63,71 @@ serve(async (req: Request) => {
     let sentCount = 0;
     let failedCount = 0;
 
-    for (const item of queued ?? []) {
+    for (const item of (claimed ?? [])) {
       try {
+        // 1. Render subject, html, and text using canonical shared templates
         const rendered = renderEmail(item.payload);
-        
-        // Look up recipient auth_id from app_user via to_studentid
-        const authId = item.app_user?.auth_id;
-        if (!authId) {
-          // Fallback direct query if join not configured
-          const { data: userRow } = await supabaseAdmin
-            .from('app_user')
-            .select('auth_id')
-            .eq('studentid', item.to_studentid)
-            .maybeSingle();
-          if (!userRow?.auth_id) {
-            throw new Error(`No app_user found for studentid ${item.to_studentid}`);
-          }
+
+        // 2. Resolve recipient auth_id from app_user via to_studentid
+        const { data: userRow, error: userRowError } = await supabaseAdmin
+          .from('app_user')
+          .select('auth_id')
+          .eq('studentid', item.to_studentid)
+          .maybeSingle();
+
+        if (userRowError || !userRow?.auth_id) {
+          throw new Error(`No app_user found for studentid ${item.to_studentid}`);
         }
 
-        const effectiveAuthId = authId ?? (
-          (await supabaseAdmin
-            .from('app_user')
-            .select('auth_id')
-            .eq('studentid', item.to_studentid)
-            .single()).data?.auth_id
-        );
-
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(effectiveAuthId);
+        // 3. Resolve login email strictly from auth.users via service role
+        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userRow.auth_id);
         if (userError || !userData?.user?.email) {
-          throw new Error(`Failed to get login email for auth_id ${effectiveAuthId}: ${userError?.message}`);
+          throw new Error(`Failed to get login email for auth_id ${userRow.auth_id}: ${userError?.message}`);
         }
 
         const loginEmail = userData.user.email;
-        const toEmails: string[] = [loginEmail];
 
-        // If email service provider configured (e.g. Resend), send here.
-        // In local/sandbox environments, log to console.
-        console.log(`[EMAIL DISPATCH] To: ${toEmails.join(', ')} | Subject: ${rendered.subject}`);
+        // 4. Send via Resend REST API (Authorization: Bearer RESEND_API_KEY, To: loginEmail only)
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: mailFrom,
+            to: [loginEmail],
+            subject: rendered.subject,
+            html: rendered.html,
+            text: rendered.text,
+          }),
+        });
 
+        if (!resendRes.ok) {
+          const errText = await resendRes.text();
+          throw new Error(`Resend API error (${resendRes.status}): ${errText}`);
+        }
+
+        // 5. Mark as sent on success
         await supabaseAdmin
           .from('email_outbox')
           .update({
             status: 'sent',
-            attempts: (item.attempts ?? 0) + 1,
             sent_at: new Date().toISOString(),
+            last_error: null,
           })
           .eq('emailid', item.emailid);
 
         sentCount++;
       } catch (err: unknown) {
+        const errorMsg = String(err).slice(0, 500);
+        console.error(`[EMAIL ERROR] Email ID ${item.emailid}: ${errorMsg}`);
+
         await supabaseAdmin
           .from('email_outbox')
           .update({
             status: 'failed',
-            attempts: (item.attempts ?? 0) + 1,
-            last_error: String(err),
+            last_error: errorMsg,
           })
           .eq('emailid', item.emailid);
 
@@ -232,7 +140,8 @@ serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: unknown) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    const errorMsg = String(err).slice(0, 500);
+    return new Response(JSON.stringify({ error: errorMsg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
