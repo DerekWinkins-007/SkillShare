@@ -31,3 +31,10 @@
 | C4 | Confirmation dialogs 45 (delete category) and 47 (delete skill) | FAIL | LOW | `src/pages/admin/AdminCategories.tsx:224` and `src/pages/admin/AdminSkills.tsx:244` trigger delete mutations directly on table action click rather than displaying confirmation dialog 45 (`Delete this category?`) and dialog 47 (`Delete this skill?`). | Add confirmation dialogs 45 and 47 in `AdminCategories.tsx` and `AdminSkills.tsx` before triggering deletions. |
 | C5 | Dialogs 34, 35, 36, 38, 39, 40, 43, 44, 46, 48 specifications | PASS | - | Titles, fields, character limits (`maxChars=100` on feedback comments, `maxChars=200` on cancel reason and skill proposal reason, `maxLength=30` on category/skill name, `maxLength=150` on location), button labels, and validation are in place across all dialogs. | None |
 | C6 | Request detail states (frames 16-21) | PASS | - | `src/pages/RequestDetail.tsx` renders all 6 request states cleanly (16: pending provider, 17: pending requester, 18: accepted requester with agree/decline, 19: confirmed with revealed counterpart contact info, 20: completed with feedback form, 21: cancelled with cancel reason banner). | None |
+
+## Phase 1D: Remote Assets
+
+| ID | Check | PASS/FAIL/UNCLEAR | Severity | Evidence | Proposed Fix |
+|---|---|---|---|---|---|
+| D1 | No remote font, icon, or script CDNs (`googleapis`, `gstatic`, `cdnjs`, `unpkg`, `cdn.jsdelivr.net`) | PASS | - | Scanned `src/`, `index.html`, `public/`. Fonts (`@fontsource/inter`, `@fontsource/jetbrains-mono`) and icons (`material-symbols`) are bundled locally via npm packages imported in `src/index.css`. No external CDN references exist in HTML, JS, or CSS. | None |
+| D2 | No unauthorized external HTTP/HTTPS URLs in client code | PASS | - | Grep for `https?://` across `src/`: only google meet placeholder text (`https://meet.google.com/...`) in `RequestDetail.tsx:632` and test mock strings in unit tests. Supabase client URL is retrieved strictly from `import.meta.env.VITE_SUPABASE_URL`. | None |
