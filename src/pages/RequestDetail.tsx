@@ -36,6 +36,10 @@ export const RequestDetail: React.FC = () => {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
 
+  // Reject & Decline confirmation state (Frames 41 & 42)
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+
   // Feedback form state
   const [feedbackRating, setFeedbackRating] = useState<number>(5);
   const [feedbackComments, setFeedbackComments] = useState('');
@@ -73,6 +77,7 @@ export const RequestDetail: React.FC = () => {
     onSuccess: () => {
       invalidateAll();
       setShowSlotForm(false);
+      setShowRejectConfirm(false);
       setActionError(null);
     },
     onError: (err: unknown) => {
@@ -88,6 +93,7 @@ export const RequestDetail: React.FC = () => {
     mutationFn: (agree: boolean) => api.respondToSlot({ requestid: idNum, agree }),
     onSuccess: () => {
       invalidateAll();
+      setShowDeclineConfirm(false);
       setActionError(null);
     },
     onError: (err: unknown) => {
@@ -332,8 +338,7 @@ export const RequestDetail: React.FC = () => {
                 variant="danger"
                 data-testid="request-action-reject"
                 disabled={respondMutation.isPending}
-                isLoading={respondMutation.isPending}
-                onClick={() => respondMutation.mutate({ accept: false })}
+                onClick={() => setShowRejectConfirm(true)}
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
                 <span>Reject Request</span>
@@ -359,8 +364,7 @@ export const RequestDetail: React.FC = () => {
                 variant="outline"
                 data-testid="request-action-decline"
                 disabled={slotAgreeMutation.isPending}
-                isLoading={slotAgreeMutation.isPending}
-                onClick={() => slotAgreeMutation.mutate(false)}
+                onClick={() => setShowDeclineConfirm(true)}
               >
                 <span className="material-symbols-outlined text-[18px]">cancel</span>
                 <span>Decline Slot</span>
@@ -692,6 +696,64 @@ export const RequestDetail: React.FC = () => {
           </div>
         </form>
       </Dialog>
+
+      {/* Reject Request Confirmation Dialog (Frame 41) */}
+      <Dialog
+        isOpen={showRejectConfirm}
+        onClose={() => setShowRejectConfirm(false)}
+        title="Reject this request?"
+        description="The requester will be notified."
+      >
+        <div className="flex items-center justify-end gap-space-sm pt-space-md">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setShowRejectConfirm(false)}
+            disabled={respondMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={respondMutation.isPending}
+            isLoading={respondMutation.isPending}
+            onClick={() => respondMutation.mutate({ accept: false })}
+          >
+            Reject request
+          </Button>
+        </div>
+      </Dialog>
+
+      {/* Decline Slot Confirmation Dialog (Frame 42) */}
+      <Dialog
+        isOpen={showDeclineConfirm}
+        onClose={() => setShowDeclineConfirm(false)}
+        title="Decline this slot?"
+        description="The request will be closed."
+      >
+        <div className="flex items-center justify-end gap-space-sm pt-space-md">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setShowDeclineConfirm(false)}
+            disabled={slotAgreeMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="hover:text-error hover:border-status-danger-border"
+            disabled={slotAgreeMutation.isPending}
+            isLoading={slotAgreeMutation.isPending}
+            onClick={() => slotAgreeMutation.mutate(false)}
+          >
+            Decline slot
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 };
+
