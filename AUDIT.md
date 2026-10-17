@@ -108,3 +108,19 @@
 | K3 | Supplementary tables match authorized list | PASS | - | Only authorized supplementary tables exist: `app_user`, `request_meeting`, `request_cancellation`, `category_request`, `skill_proposal`, `notification`, and `email_outbox`. No extra or extraneous tables exist. | None |
 | K4 | Unique indexes and data integrity constraints | PASS | - | `idx_category_name_lower` on `category(lower(categoryname))`, `idx_skill_name_cat_lower` on `skill(categoryid, lower(skillname))`, `idx_signup_username_upper` on `signup(upper(username))`. Foreign keys and cascade/restrict rules properly defined on all relationship tables. Check constraints enforce `rating BETWEEN 1 AND 5`, duration in `{30, 45, 60, 90}`, mode in `{'online', 'offline'}`, and offline meetings requiring location. | None |
 
+## Phase 1L: Tests and Documentation
+
+| ID | Check | PASS/FAIL/UNCLEAR | Severity | Evidence | Proposed Fix |
+|---|---|---|---|---|---|
+| L1 | Vitest test suite completeness | PASS | - | 4 test suites (`mock.adapter.test.ts`, `supabase.adapter.test.ts`, `rules.test.ts`, `emailTemplates.test.ts`), 64 unit and integration tests passing. Covers auth flows, profile completeness, duplicate requests, slot proposals, cancellations, ratings, and outbox email formatting. | None |
+| L2 | SQL behavior tests and schema verification | PASS | - | `supabase/tests/verify.sql` contains comprehensive schema tests (17 tables, views, 49 RPC signatures, constraints, identity seeds). `supabase/tests/contract_check.ts` provides automated adapter-to-SQL contract verification. | None |
+| L3 | Scratch files and git cleanliness | PASS | - | `scratch/` directory added to `.gitignore`. No untracked scratch files committed to repository. | None |
+| L4 | No lingering TODO/FIXME markers | PASS | - | Grep for `TODO` and `FIXME` across `src/` returned 0 occurrences. | None |
+
+## Phase 1M: data-testid Baseline Comparison
+
+| ID | Check | PASS/FAIL/UNCLEAR | Severity | Evidence | Proposed Fix |
+|---|---|---|---|---|---|
+| M1 | Comparison against baseline commit `1a902cf` (before restyle) | PASS | - | Executed `scratch/check_testids.cjs` comparing `1a902cf` vs `HEAD`: BASE had 151 unique `data-testid` attributes; HEAD has 153 unique `data-testid` attributes. Exactly 0 `data-testid` attributes were removed or missing. All baseline test identifiers are fully preserved. | None |
+
+
