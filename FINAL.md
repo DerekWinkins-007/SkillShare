@@ -1,7 +1,7 @@
 # Final Verification Checklist
 
 - [x] Item 1: Save migration 0012 in the repo
-- [ ] Item 2: Email payload compatibility
+- [x] Item 2: Email payload compatibility
 - [ ] Item 3: Adapter calls the email function
 - [ ] Item 4: Remove leftover extras and verify route links
 - [ ] Item 5: Verify confirmation dialogs and reports page
