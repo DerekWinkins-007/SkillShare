@@ -21,7 +21,7 @@ export const AdminRequests: React.FC = () => {
             System Administration
           </p>
           <h1 className="font-display-lg text-display-lg text-on-surface tracking-tight font-bold">
-            All Skill Requests (Admin Oversight)
+            Requests
           </h1>
         </div>
 

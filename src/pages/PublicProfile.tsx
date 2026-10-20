@@ -69,24 +69,19 @@ export const PublicProfile: React.FC = () => {
       {/* Header Profile Card */}
       <section className="w-full bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-space-lg shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
-          <div className="flex items-start gap-space-md">
-            <div className="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-headline-lg font-bold text-headline-lg shrink-0">
-              {profile.fname.charAt(0)}{profile.lname.charAt(0)}
-            </div>
-            <div className="flex flex-col gap-1">
-              <h1 data-testid="publicprofile-name" className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
-                {profile.fname} {profile.lname}
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-space-md gap-y-1 font-body-sm text-body-sm text-secondary">
-                <div className="flex items-center gap-1">
-                  <span className="font-medium text-secondary">Department:</span>
-                  <strong data-testid="publicprofile-dept" className="text-on-surface font-semibold">{profile.dept}</strong>
-                </div>
-                <span className="hidden sm:inline text-outline-variant">•</span>
-                <div className="flex items-center gap-1">
-                  <span className="font-medium text-secondary">Year:</span>
-                  <strong data-testid="publicprofile-year" className="text-on-surface font-semibold">{profile.year}</strong>
-                </div>
+          <div className="flex flex-col gap-1">
+            <h1 data-testid="publicprofile-name" className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
+              {profile.fname} {profile.lname}
+            </h1>
+            <div className="flex flex-wrap items-center gap-x-space-md gap-y-1 font-body-sm text-body-sm text-secondary">
+              <div className="flex items-center gap-1">
+                <span className="font-medium text-secondary">Department:</span>
+                <strong data-testid="publicprofile-dept" className="text-on-surface font-semibold">{profile.dept}</strong>
+              </div>
+              <span className="hidden sm:inline text-outline-variant">•</span>
+              <div className="flex items-center gap-1">
+                <span className="font-medium text-secondary">Year:</span>
+                <strong data-testid="publicprofile-year" className="text-on-surface font-semibold">{profile.year}</strong>
               </div>
             </div>
           </div>

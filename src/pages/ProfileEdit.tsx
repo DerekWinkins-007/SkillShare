@@ -75,13 +75,8 @@ export const ProfileEdit: React.FC = () => {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-margin md:px-margin-wide py-space-xl">
-      {/* Top Breadcrumb & Title */}
+      {/* Top Title Area */}
       <div className="flex flex-col gap-space-2xs mb-space-xl">
-        <div className="flex items-center gap-space-2xs font-label-sm text-label-sm text-secondary">
-          <span>Account</span>
-          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-          <span className="text-on-surface font-medium">Edit profile</span>
-        </div>
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
           <h1 className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
             Edit profile

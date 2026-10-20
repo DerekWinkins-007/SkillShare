@@ -47,10 +47,6 @@ export const StudentDashboard: React.FC = () => {
           <h1 className="font-display-lg text-display-lg font-bold text-on-surface tracking-tight">
             Dashboard
           </h1>
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-status-success-bg border border-status-success-border text-status-success-text text-label-xs font-semibold uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-status-success-text"></span>
-            <span>Active</span>
-          </div>
         </div>
 
         <div className="flex items-center gap-space-xs">

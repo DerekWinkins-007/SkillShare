@@ -238,7 +238,7 @@ export const RequestDetail: React.FC = () => {
           className="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary hover:text-primary-container transition-colors w-fit"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          <span>Back to Requests List</span>
+          <span>Requests</span>
         </Link>
       </nav>
 
