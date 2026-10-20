@@ -235,18 +235,23 @@ describe('SupabaseAdapter test suite', () => {
       });
     });
 
-    it('calls create_request with p_provider_studentid and p_skillid', async () => {
+    it('calls create_request with p_provider_studentid and p_skillid and triggers process-email-outbox', async () => {
       mockSupabase.rpc.mockResolvedValueOnce({ data: 301, error: null });
+      mockSupabase.functions.invoke.mockResolvedValueOnce({ data: { sent: 1, failed: 0 }, error: null });
       const res = await adapter.createRequest({ provider_studentid: 102, skillid: 201 });
       expect(mockSupabase.rpc).toHaveBeenCalledWith('create_request', {
         p_provider_studentid: 102,
         p_skillid: 201,
       });
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('process-email-outbox', {
+        body: { requestid: 301 },
+      });
       expect(res).toBe(301);
     });
 
-    it('calls respond_to_request with p_ parameters', async () => {
+    it('calls respond_to_request with p_ parameters and triggers process-email-outbox', async () => {
       mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null });
+      mockSupabase.functions.invoke.mockResolvedValueOnce({ data: { sent: 1, failed: 0 }, error: null });
       await adapter.respondToRequest({
         requestid: 301,
         accept: true,
@@ -268,23 +273,34 @@ describe('SupabaseAdapter test suite', () => {
         p_location: null,
         p_meeting_link: 'https://meet.google.com/abc',
       });
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('process-email-outbox', {
+        body: { requestid: 301 },
+      });
     });
 
-    it('calls respond_to_slot with p_requestid and p_agree', async () => {
+    it('calls respond_to_slot with p_requestid and p_agree and triggers process-email-outbox', async () => {
       mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null });
+      mockSupabase.functions.invoke.mockResolvedValueOnce({ data: { sent: 1, failed: 0 }, error: null });
       await adapter.respondToSlot({ requestid: 301, agree: true });
       expect(mockSupabase.rpc).toHaveBeenCalledWith('respond_to_slot', {
         p_requestid: 301,
         p_agree: true,
       });
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('process-email-outbox', {
+        body: { requestid: 301 },
+      });
     });
 
-    it('calls cancel_request with p_requestid and p_reason', async () => {
+    it('calls cancel_request with p_requestid and p_reason and triggers process-email-outbox', async () => {
       mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null });
+      mockSupabase.functions.invoke.mockResolvedValueOnce({ data: { sent: 1, failed: 0 }, error: null });
       await adapter.cancelRequest({ requestid: 301, reason: 'Personal emergency' });
       expect(mockSupabase.rpc).toHaveBeenCalledWith('cancel_request', {
         p_requestid: 301,
         p_reason: 'Personal emergency',
+      });
+      expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('process-email-outbox', {
+        body: { requestid: 301 },
       });
     });
 
