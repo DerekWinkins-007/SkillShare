@@ -156,11 +156,11 @@ SkillShare/
 | `/skills/:skillid` | `SkillDetail` | `RequireStudent` | View skill details, instructors list, and request session |
 | `/requests` | `RequestsList` | `RequireStudent` | Received and Sent skill requests with status tabs |
 | `/requests/:requestid` | `RequestDetail` | `RequireStudent` | Request lifecycle actions (accept, propose slot, cancel, contact reveal) |
+| `/students/:studentid` | `PublicProfile` | `RequireStudent` | Public view of student skills and reviews (contact details strictly hidden) |
 | `/profile/setup` | `ProfileSetup` | `RequireStudent` (allows incomplete) | Mandatory 3-step profile onboarding |
 | `/profile/edit` | `ProfileEdit` | `RequireStudent` (allows incomplete) | Edit personal details and contact numbers |
-| `/profile/:studentid` | `PublicProfile` | `RequireStudent` | Public view of student skills and reviews (redacted contact info) |
 | `/proposals` | `StudentProposals` | `RequireStudent` | Submit category requests and skill proposals |
-| `/reports` | `Reports` | `RequireStudent` | Run system SQL reports 1 to 5 |
+| `/reports` | `Reports` | `RequireAnyAuth` | Run system SQL reports 1 to 5 (stacked cards for student & admin) |
 | `/admin` | `AdminDashboard` | `RequireAdmin` | Administrative overview and system metrics |
 | `/admin/categories` | `AdminCategories` | `RequireAdmin` | Category CRUD and category request approval queue |
 | `/admin/skills` | `AdminSkills` | `RequireAdmin` | Skill CRUD and skill proposal approval queue |
@@ -169,65 +169,66 @@ SkillShare/
 
 ---
 
-## 5. Feature to Database Table Mapping
- 
-| Feature | Tables Read | Tables Written |
-|---|---|---|
-| **Student Sign-Up** | `signup`, `app_user` | `student`, `signup`, `app_user` |
-| **Admin Sign-Up** | `app_user` | `app_user` |
-| **Student Sign-In** | `signup`, `app_user`, `student` | None (reads session / verifies regno + email via RPC) |
-| **Admin Sign-In** | `app_user` | None (reads session / verifies admin role) |
-| **Get Me / Auth State** | `app_user`, `student`, `signup` | None |
-| **Update Profile** | `student` | `student` |
-| **View Public Profile** | `student`, `studenthas_skill`, `skill`, `category`, `student_receives_feedback`, `skill_request`, `student_receives_skill_request` | None |
-| **List Catalogue / Skills** | `skill`, `category`, `studenthas_skill` (via `v_skill_catalogue`) | None |
-| **Manage My Skills** | `studenthas_skill`, `skill`, `category` | `studenthas_skill` |
-| **Submit Category Request** | `category`, `category_request`, `student` | `category_request` |
-| **Submit Skill Proposal** | `skill`, `skill_proposal`, `category`, `student` | `skill_proposal` |
-| **Admin Category Management** | `category`, `skill` | `category` |
-| **Admin Skill Management** | `skill`, `category`, `skill_request` | `skill`, `studenthas_skill` |
-| **Review Category Request** | `category_request`, `category`, `student`, `signup` | `category_request`, `category`, `notification` |
-| **Review Skill Proposal** | `skill_proposal`, `skill`, `category`, `student`, `signup` | `skill_proposal`, `skill`, `notification` |
-| **Create Skill Request** | `student`, `skill`, `studenthas_skill`, `skill_request`, `student_sends_skill_request`, `student_receives_skill_request` | `skill_request`, `student_sends_skill_request`, `student_receives_skill_request`, `notification`, `email_outbox` |
-| **Respond to Request (Accept/Reject)** | `skill_request`, `student_receives_skill_request`, `request_meeting` | `skill_request`, `request_meeting`, `notification`, `email_outbox` |
-| **Respond to Slot (Agree/Decline)** | `skill_request`, `student_sends_skill_request`, `request_meeting` | `skill_request`, `notification`, `email_outbox` |
-| **Cancel Request** | `skill_request`, `student_sends_skill_request`, `student_receives_skill_request`, `request_meeting` | `skill_request`, `request_cancellation`, `notification`, `email_outbox` |
-| **Contact Reveal** | `skill_request`, `student_sends_skill_request`, `student_receives_skill_request`, `student` | None |
-| **Sync Completed / Expired** | `skill_request`, `request_meeting`, `student_sends_skill_request`, `student_receives_skill_request` | `skill_request`, `request_cancellation`, `notification` |
-| **Feedback Submission** | `skill_request`, `student_sends_skill_request`, `student_receives_skill_request`, `student_gives_feedback`, `student_receives_feedback` | `student_gives_feedback`, `student_receives_feedback`, `notification` |
-| **Notifications** | `notification` | `notification` (mark read) |
-| **Admin Oversight (Students, Requests, Stats)** | `student`, `signup`, `skill_request`, `skill`, `category`, `category_request`, `skill_proposal`, `student_gives_feedback` | None |
-| **Reports (1 to 5)** | `student`, `skill`, `category`, `student_gives_feedback`, `skill_request`, `student_receives_feedback` | None |
+## 5. Email Architecture & Dispatch Mechanics
+
+- **Login Email vs Contact Details**: The login email (`auth.users.email`) is the **only** email address that receives notifications and session emails. The fields `student.email1` and `student.email2` are contact details shared with counterpart students only after a session is confirmed. They are never used to log in or to deliver system emails.
+- **Outbox Pattern**: PostgreSQL transactions writing workflow mutations (`create_request`, `respond_to_request`, `respond_to_slot`, `cancel_request`) insert pre-built notification payloads into `public.email_outbox` with status `queued` and attempts `0`.
+- **Atomic Processing**: The Edge Function `process-email-outbox` atomically claims batches using `public.claim_outbox_emails(p_batch_size, p_requestid)` with `FOR UPDATE SKIP LOCKED`.
+- **Resend Dispatch**: Dispatched via Resend API using secrets configured in Supabase:
+  ```bash
+  npx supabase secrets set RESEND_API_KEY="re_..." MAIL_FROM="SkillShare <onboarding@resend.dev>"
+  npx supabase functions deploy process-email-outbox
+  ```
 
 ---
 
-## 6. Query Key Invalidation Mapping
+## 6. Architecture for the Report
 
-All cache keys are generated from the typed factory in `src/lib/queryKeys.ts`.
+### The Ten Original Tables
+1. `student`: Core student entity (`studentid`, `fname`, `lname`, `dept`, `year`, `phone1`, `phone2`, `email1`, `email2`, `profile_complete`).
+2. `category`: Grouping for skills (`categoryid`, `categoryname`).
+3. `skill`: Skills offered in catalogue (`skillid`, `skillname`, `categoryid`).
+4. `studenthas_skill`: Associative table linking students who can teach a skill (`studentid`, `skillid`).
+5. `skill_request`: Skill request lifecycle records (`requestid`, `requestdate`, `status`, `skillid`).
+6. `student_sends_skill_request`: Associative table identifying the learner (`studentid`, `requestid`).
+7. `student_receives_skill_request`: Associative table identifying the teacher (`studentid`, `requestid`).
+8. `student_gives_feedback`: Feedback rating and comments submitted by learner (`feedbackid`, `requestid`, `studentid`, `rating`, `comments`, `given_at`).
+9. `student_receives_feedback`: Counterpart feedback link for the teacher (`feedbackid`, `requestid`, `studentid`).
+10. `signup`: Legacy registration identity linking student to username (`studentid`, `username`, `password_hash`).
 
-| Mutation / Action | Target Query Keys Invalidated |
-|---|---|
-| `updateMyProfile` | `queryKeys.auth.me` |
-| `addMySkill` | `queryKeys.catalogue.mySkills`, `['catalogue', 'skills']` |
-| `removeMySkill` | `queryKeys.catalogue.mySkills`, `['catalogue', 'skills']` |
-| `submitCategoryRequest` | `queryKeys.proposals.myCategoryRequests` |
-| `submitSkillProposal` | `queryKeys.proposals.mySkillProposals` |
-| `adminCreateCategory` | `queryKeys.catalogue.categories`, `queryKeys.admin.stats` |
-| `adminUpdateCategory` | `queryKeys.catalogue.categories` |
-| `adminDeleteCategory` | `queryKeys.catalogue.categories`, `queryKeys.admin.stats` |
-| `adminCreateSkill` | `['catalogue', 'skills']`, `queryKeys.admin.stats` |
-| `adminUpdateSkill` | `['catalogue', 'skills']` |
-| `adminDeleteSkill` | `['catalogue', 'skills']`, `queryKeys.admin.stats` |
-| `adminReviewCategoryRequest` | `['admin', 'categoryRequests']`, `queryKeys.catalogue.categories`, `queryKeys.admin.stats` |
-| `adminReviewSkillProposal` | `['admin', 'skillProposals']`, `['catalogue', 'skills']`, `queryKeys.admin.stats` |
-| `createRequest` | `queryKeys.requests.myRequests('requester')`, `queryKeys.dashboard.my` |
-| `respondToRequest` | `queryKeys.requests.detail(id)`, `queryKeys.requests.myRequests('provider')`, `queryKeys.dashboard.my` |
-| `respondToSlot` | `queryKeys.requests.detail(id)`, `queryKeys.requests.contact(id)`, `queryKeys.requests.myRequests('requester')`, `queryKeys.dashboard.my` |
-| `cancelRequest` | `queryKeys.requests.detail(id)`, `queryKeys.requests.myRequests('requester')`, `queryKeys.requests.myRequests('provider')`, `queryKeys.dashboard.my` |
-| `syncCompletedRequests` | `queryKeys.requests.myRequests('requester')`, `queryKeys.requests.myRequests('provider')`, `queryKeys.requests.feedbackDue`, `queryKeys.notifications.list`, `queryKeys.dashboard.my` |
-| `submitFeedback` | `queryKeys.requests.detail(id)`, `queryKeys.requests.feedbackDue`, `queryKeys.dashboard.my`, `queryKeys.profile.public(id)` |
-| `markNotificationsRead` | `queryKeys.notifications.list` |
-| `signIn` / `signInAdmin` / `signOut` / `onAuthChange` | `queryKeys.auth.me`, all cache cleared on sign out |
+### The Seven Supplementary Tables (Why Each Exists)
+1. `app_user`: Bridges Supabase Auth (`auth_id` UUID) with application domain roles (`role`: 'student' | 'admin') and links to `student.studentid`.
+2. `request_meeting`: Isolates scheduling details (`meeting_time`, `duration_minutes`, `mode`, `location`, `meeting_link`, `proposed_at`) from the core request state machine, allowing clean slot proposals and conflict detection without overloading `skill_request`.
+3. `request_cancellation`: Records cancellation audit trails (`cancelled_by`, `reason`, `cancelled_at`) for both accepted and confirmed requests.
+4. `category_request`: Student self-service queue for requesting new categories (`proposed_name`, `status`, `reviewed_by`, `reviewed_at`, `admin_notes`).
+5. `skill_proposal`: Student self-service queue for proposing new skills within an existing category (`proposed_name`, `categoryid`, `status`, `reviewed_by`, `reviewed_at`, `admin_notes`).
+6. `notification`: In-app notification queue (`studentid`, `kind`, `ref_id`, `is_read`, `created_at`) supporting real-time alerts.
+7. `email_outbox`: Transactional outbox table (`requestid`, `kind`, `to_studentid`, `payload`, `status`, `attempts`, `last_error`, `created_at`, `sent_at`) decoupling database state transitions from external HTTP email delivery.
+
+### Status Lifecycle State Machine
+```
+[pending] ──(Provider accepts + proposes slot)──> [accepted]
+[pending] ──(Provider rejects)──────────────────> [rejected]
+[pending] ──(Requester cancels)─────────────────> [cancelled]
+[accepted] ──(Requester agrees)─────────────────> [confirmed]
+[accepted] ──(Requester declines)───────────────> [rejected]
+[accepted] ──(Either party cancels >= 1h)───────> [cancelled]
+[accepted] ──(Cancel deadline expires)──────────> [cancelled] (auto-sync)
+[confirmed] ──(Either party cancels >= 1h)──────> [cancelled]
+[confirmed] ──(Meeting ends)────────────────────> [completed] (auto-sync)
+[completed] ──(Requester submits feedback)──────> Feedback recorded
+```
+
+### RLS and RPC Security Model
+- **Row Level Security (RLS)** is enabled on all 17 tables and views. Direct table access is restricted to authenticated users.
+- Sensitive tables (`email_outbox`, `request_cancellation`, `signup`, `app_user`) have zero direct public write grants.
+- All domain operations are encapsulated behind PostgreSQL functions marked `SECURITY DEFINER` with fixed `search_path = public, pg_temp`.
+- Caller identity is securely derived from `auth.uid()` via helper function `public.my_studentid()`. Students cannot impersonate peers, access another student's contact details outside confirmed sessions, or bypass transition constraints.
+
+### Why Credentials Live in Supabase Auth instead of signup.password
+- `signup.password` (or `signup.password_hash`) in the original schema is insecure and unsuited for modern web authentication (lacking salt, secure hashing like bcrypt/argon2, session token issuance, CSRF protection, and refresh rotation).
+- Delegating identity and password verification to Supabase Auth (`auth.users`) provides industry-standard JWT sessions, secure token storage, brute-force throttling, and email confirmation flows.
+- `signup` is maintained purely for relational fidelity to the academic course specification, recording registration numbers alongside `student` records.
 
 ---
 
@@ -244,3 +245,4 @@ As required by Section 0 ("Never guess: if something is not specified, implement
 7. **Default Route**: Non-authenticated visitors accessing the root `/` or any unknown route are redirected to `/login`, which automatically routes authenticated users to `/admin` or `/dashboard` based on their role.
 8. **Feedback Prompt Dismissal**: Dismissed feedback prompts remain suppressed in the current browser session's in-memory state and re-surface upon next login or page reload while feedback remains due.
 9. **Login Email vs Contact Emails**: The login email is stored in `auth.users.email` and is the only address used to sign in and receive SkillShare notifications and meeting emails. In contrast, `student.email1` and `student.email2` are contact emails disclosed only after a session is confirmed. Modifying contact emails in student profile setup/edit never affects authentication credentials or notification delivery destinations.
+

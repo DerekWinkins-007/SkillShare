@@ -28,7 +28,9 @@ supabase/
 │   ├── 0008_login_email_fix.sql             # strict auth.users login email resolution
 │   ├── 0009_security_and_rule_parity.sql   # RLS on all tables, phone +91 regex, indexes
 │   ├── 0010_fix_cancel_window_accepted.sql  # cancel cutoff enforcement on accepted status
-│   └── 0011_claim_outbox_emails.sql        # atomic FOR UPDATE SKIP LOCKED outbox claiming
+│   ├── 0011_claim_outbox_emails.sql        # atomic FOR UPDATE SKIP LOCKED outbox claiming
+│   ├── 0012_claim_outbox_fix.sql           # claim_outbox_emails fix for attempts column
+│   └── 0013_fix_cancel_request_email_payload.sql # cancel_request payload fidelity with templates
 └── tests/
     ├── contract_check.ts                    # Automated contract verification script
     ├── contract_check.cmd                   # Windows runner for contract check
@@ -42,13 +44,13 @@ supabase/
 ### In Supabase Dashboard (SQL Editor)
 If using Supabase Cloud:
 1. Open the **SQL Editor** in your Supabase dashboard.
-2. Execute each file in `supabase/migrations/` sequentially from `0001` through `0011`.
+2. Execute each file in `supabase/migrations/` sequentially from `0001` through `0013`.
 3. All tables, functions, triggers, and grants will be created with zero errors.
 
 ### Edge Functions Deployment
 1. Set secrets:
    ```bash
-   npx supabase secrets set RESEND_API_KEY="..." MAIL_FROM="..." ADMIN_KEYPHRASE="..."
+   npx supabase secrets set RESEND_API_KEY="re_..." MAIL_FROM="SkillShare <onboarding@resend.dev>" ADMIN_KEYPHRASE="..."
    ```
 2. Deploy functions:
    ```bash

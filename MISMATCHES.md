@@ -85,3 +85,4 @@ All RPC exceptions use `RAISE EXCEPTION '<ERROR_CODE>' USING DETAIL = '...'`. Th
 - When state mutations occur (`create_request`, `respond_to_request`, `respond_to_slot`, `cancel_request`), rows are inserted into `public.email_outbox` with pre-formed JSON payloads.
 - The client triggers `process-email-outbox` Edge Function fire-and-forget.
 - The Edge Function renders the subject and body using identical HTML/text formatting as `shared/emailTemplates.ts`.
+- All JSON payload keys (`kind`, `requestid`, `skillname`, `categoryname`, `recipient_role`, `meeting_time`, `duration_minutes`, `mode`, `location`, `meeting_link`, `cancel_deadline`, `counterpart`, `cancelled_by_fname`, `requester_name`, `provider_name`, `reason`) match byte-for-byte with the types defined in `shared/emailTemplates.ts` and `supabase/functions/_shared/emailTemplates.ts` (enforced via migration 0013 and verified by `shared/emailTemplates.test.ts`).
