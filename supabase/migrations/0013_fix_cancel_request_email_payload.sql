@@ -1,7 +1,4 @@
--- 0013_fix_cancel_request_email_payload.sql
--- SkillShare: Fix cancel_request email_outbox payload to match shared/emailTemplates.ts
--- Restores 'cancelled_by_fname' and 'meeting_time' so cancellation emails render correctly without undefined/null
-
+-- 0013 (corrected): cancel_request with email payload fix, pending-cancel rule and search_path
 CREATE OR REPLACE FUNCTION public.cancel_request(
     p_requestid integer,
     p_reason text
@@ -43,6 +40,10 @@ BEGIN
         RAISE EXCEPTION 'INVALID_TRANSITION';
     END IF;
 
+    IF v_sr.status = 'pending' AND v_my_sid <> v_req_sid THEN
+        RAISE EXCEPTION 'INVALID_TRANSITION';
+    END IF;
+
     v_reason := trim(p_reason);
     IF length(v_reason) = 0 OR length(v_reason) > 200 THEN
         RAISE EXCEPTION 'VALIDATION' USING DETAIL = 'Reason 1-200 chars';
@@ -50,7 +51,6 @@ BEGIN
 
     SELECT * INTO v_rm FROM public.request_meeting WHERE requestid = p_requestid;
 
-    -- If accepted or confirmed, verify cancel deadline (both have a meeting_time)
     IF v_sr.status IN ('accepted', 'confirmed') THEN
         IF v_rm.meeting_time IS NOT NULL AND now() > public.cancel_deadline(v_rm.meeting_time) THEN
             RAISE EXCEPTION 'CANCEL_WINDOW_CLOSED';
@@ -71,11 +71,9 @@ BEGIN
     SET status = 'cancelled'
     WHERE requestid = p_requestid;
 
-    -- Notify counterpart
     INSERT INTO public.notification (studentid, kind, ref_id, is_read, created_at)
     VALUES (v_cp_sid, 'request_cancelled', p_requestid, false, now());
 
-    -- Email counterpart with exact payload contract
     INSERT INTO public.email_outbox (requestid, kind, to_studentid, payload, status, attempts, created_at)
     VALUES (
         p_requestid,
@@ -94,4 +92,4 @@ BEGIN
         now()
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
