@@ -5,7 +5,7 @@
 - [x] Item 3: Adapter calls the email function
 - [x] Item 4: Remove leftover extras and verify route links
 - [x] Item 5: Verify confirmation dialogs and reports page
-- [ ] Item 6: Full verification (typecheck, lint, test, build, audit)
+- [x] Item 6: Full verification (typecheck, lint, test, build, audit)
 - [ ] Item 7: Docs update
 - [ ] Item 8: Final report
 
