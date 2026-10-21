@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="ss-primary-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3525CD" />
+    </linearGradient>
+    <linearGradient id="ss-accent-grad" x1="16" y1="6" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E0E7FF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded squircle with subtle border -->
+  <rect x="1" y="1" width="30" height="30" rx="7.5" fill="url(#ss-primary-grad)" />
+  <rect x="1" y="1" width="30" height="30" rx="7.5" stroke="#4338CA" stroke-width="1" stroke-opacity="0.3" />
+
+  <!-- Dynamic S-curve & node representing Skill sharing exchange -->
+  <!-- Upper loop of S -->
+  <path
+    d="M22 11.5C22 9.5 20 8 16.5 8C13 8 10 9.8 10 12.5C10 15.5 13 16.5 16 17.5C19.5 18.5 22 19.8 22 23C22 25.8 19 28 15.5 28C11.5 28 9.5 25.5 9.5 23.5"
+    stroke="url(#ss-accent-grad)"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Top-right exchange spark / node dot -->
+  <circle cx="22.5" cy="9.5" r="2" fill="#E2DFFF" />
+</svg>
